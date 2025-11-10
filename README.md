@@ -706,7 +706,7 @@ graph TB
     subgraph Analysis[Analysis Layer]
         STATIC[Static Charts<br/>28 matplotlib]
         INTERACTIVE[Interactive Charts<br/>28 plotly]
-        INSIGHTS[AI Insights<br/>GPT-4 Analysis]
+        INSIGHTS[AI Insights<br/>IBM Granite Insights]
         MERMAID[Workflow Diagrams<br/>8 mermaid]
     end
 
