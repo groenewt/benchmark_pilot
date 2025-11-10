@@ -1,4 +1,8 @@
-# RAG Embedding Model Benchmark Report
+# PILOT RAG Embedding Model Benchmark Report 
+
+***THIS IS A PROTOTYPE***
+
+***FOR HTML VERSION, VIEW report.html << Lowquality :(***
 
 **Generated:** 2025-11-09 18:26:37
 **Models Tested:** 15
@@ -411,7 +415,7 @@ This section provides workflow diagrams and system architecture visualizations t
 
 The complete RAG benchmark process from configuration to report generation:
 
-
+```mermaid
 flowchart TD
     A[Start: RAG Benchmark] --> B[Load Configuration]
     B --> C[Load Embedding Models]
@@ -445,19 +449,19 @@ flowchart TD
     style P fill:#DDA0DD
     style Q fill:#F0E68C
     style R fill:#FFA07A
-
+```
 
 
 ### 8.2 Model Hierarchy
 
 Organization of embedding models by developer:
 
-
+```mermaid
 graph TD
     ROOT[Embedding Models] --> DEV
     DEV[By Developer]
 
-    DEV --> dev_Beijing_Academy_of_Artificial_Intelligence_BAAI[Beijing Academy of Artificial Intelligence (BAAI)]
+    DEV --> dev_Beijing_Academy_of_Artificial_Intelligence_BAAI[Beijing Academy of Artificial Intelligence]
     dev_Beijing_Academy_of_Artificial_Intelligence_BAAI --> bge_large_335m["bge large 335m"]
     dev_Beijing_Academy_of_Artificial_Intelligence_BAAI --> bge_m3_567m["bge m3 567m"]
 
@@ -470,7 +474,7 @@ graph TD
     dev_IBM_Research_/_IBM_Granite_Team --> granite_embedding_30m_fp16["granite embedding 30mandlt;br/andgt;fp16"]
     dev_IBM_Research_/_IBM_Granite_Team --> granite_embedding_278m_fp16["granite embedding 278mandlt;br/andgt;fp16"]
 
-    DEV --> dev_Mixedbread_AI_Berlin[Mixedbread AI (Berlin)]
+    DEV --> dev_Mixedbread_AI_Berlin[Mixedbread AI Berlin]
     dev_Mixedbread_AI_Berlin --> mxbai_embed_large["mxbai embed large"]
 
     DEV --> dev_Nomic_AI[Nomic AI]
@@ -488,14 +492,14 @@ graph TD
 
     style ROOT fill:#FFD700,stroke:#333,stroke-width:3px
     style DEV fill:#87CEEB,stroke:#333,stroke-width:2px
-
+```
 
 
 ### 8.3 Performance Tiers
 
 Models grouped by performance levels:
 
-
+```mermaid
 graph TB
     ROOT[Performance Tiers] 
 
@@ -522,14 +526,14 @@ graph TB
     style TIER3 fill:#CD5C5C,color:#fff
 
     style ROOT fill:#9370DB,stroke:#333,stroke-width:4px,color:#fff
-
+```
 
 
 ### 8.4 Processing Pipeline
 
 Data flow through the benchmark system:
 
-
+```mermaid
 flowchart LR
     subgraph Input
         M[15 Models]
@@ -583,14 +587,14 @@ flowchart LR
     style VIZ fill:#DDA0DD
     style INSIGHTS fill:#F0E68C
     style REPORT fill:#FFB6C1
-
+```
 
 
 ### 8.5 Category Performance Flow
 
 How question categories contribute to overall performance:
 
-
+```mermaid
 flowchart LR
     subgraph Question_Types[Question Types]
         SHORT[Short<br/>0.608]
@@ -623,14 +627,14 @@ flowchart LR
     style IMPLIED fill:#DDA0DD
     style UNCLEAR fill:#FFB6C1
     style OVERALL fill:#FF6347,color:#fff,stroke:#000,stroke-width:3px
-
+```
 
 
 ### 8.6 Top Models Comparison
 
 Head-to-head comparison of top 5 performing models:
 
-
+```mermaid
 graph LR
     BENCH[RAG Benchmark] 
 
@@ -646,14 +650,14 @@ graph LR
     style M5 fill:#FFD700,color:#000
 
     style BENCH fill:#9370DB,stroke:#333,stroke-width:4px,color:#fff
-
+```
 
 
 ### 8.7 Geographic Distribution
 
 Global distribution of embedding models:
 
-
+```mermaid
 graph TB
     ROOT[Global Distribution] 
 
@@ -670,14 +674,14 @@ graph TB
     Europe_Germany --> Germany_mxbai_embed_large["mxbai embed large<br/>0.8000"]
 
     style ROOT fill:#9370DB,stroke:#333,stroke-width:3px,color:#fff
-
+```
 
 
 ### 8.8 System Architecture
 
 Complete system architecture showing all components:
 
-
+```mermaid
 graph TB
     subgraph Config[Configuration Layer]
         EMB_CFG[embedding.json<br/>Model Metadata]
@@ -736,7 +740,7 @@ graph TB
     style Processing fill:#87CEEB
     style Analysis fill:#DDA0DD
     style Output fill:#90EE90
-
+```
 
 
 ---
@@ -824,9 +828,8 @@ Accuracy is measured as the percentage of questions where the correct source chu
 
 - **Results Summary:** `results/results.csv`
 - **Detailed Results:** `results/detailed_results.csv`
-- **Questions:** `questions.csv`
-- **Source Chunks:** `chunks.csv`
-- **Model Metadata:** `configs/embedding.json`
+- **Questions:** `results/questions.csv`
+- **Source Chunks:** `results/chunks.csv`
 
 ---
 

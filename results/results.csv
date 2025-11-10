@@ -1,0 +1,16 @@
+model,overall_accuracy,short,long,direct,implied,unclear
+essays_nomic_embed_text_1_5,0.75,0.725,0.7625,0.75,0.75,0.7625
+essays_snowflake_arctic_embed2_568m,0.8125,0.7625,0.825,0.825,0.8,0.85
+essays_bge_large_335m,0.8225,0.7625,0.825,0.8375,0.8375,0.85
+essays_qwen3_embedding_4b_q8_0,0.875,0.775,0.9375,0.925,0.875,0.8625
+essays_qwen3_embedding_0_6b_fp16,0.8425,0.725,0.8875,0.8875,0.8,0.9125
+essays_qwen3_embedding_0_6b_q8_0,0.845,0.725,0.8875,0.9,0.8,0.9125
+essays_bge_m3_567m,0.7825,0.75,0.825,0.825,0.7625,0.75
+essays_embeddinggemma_300m_qat_q4,0.2075,0.075,0.3125,0.2375,0.25,0.1625
+essays_embeddinggemma_300m_qat_q8,0.1575,0.0375,0.2375,0.1875,0.1875,0.1375
+essays_embeddinggemma_300m_bf16,0.125,0.0375,0.1625,0.1625,0.175,0.0875
+essays_granite_embedding_30m_fp16,0.72,0.65,0.7375,0.75,0.725,0.7375
+essays_granite_embedding_278m_fp16,0.7325,0.7375,0.75,0.7625,0.7,0.7125
+essays_mxbai_embed_large,0.8,0.7625,0.8,0.8125,0.7875,0.8375
+essays_qwen3_embedding_8b,0.9025,0.825,0.9375,0.9125,0.925,0.9125
+essays_qwen3_embedding_4b_q4_k_m,0.86,0.775,0.925,0.9125,0.8375,0.85
