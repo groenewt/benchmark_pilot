@@ -9,6 +9,9 @@
 **Total Questions:** 400
 **Configuration:** 20 chunks × 20 questions
 
+***TO EVALUATE***: *essays_granite_embedding_30m_fp16: Surprisingly strong performance for small model (30M params, 72.0% accuracy)* -> this LLM takeway is rather minimal in most of  LLM analysis but I think it one of the more profound observations  
+
+*NOTE: EVERYTHING BELOW HAS BEEN GENERATED WITH LOCAL AI UTILIZING OLLAMA*
 ---
 
 ## Executive Summary
