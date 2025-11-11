@@ -1,0 +1,3507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Characteristics Explorer - Comprehensive Metadata</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2d3748;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 40px;
+            border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            margin-bottom: 20px;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-2px);
+        }
+
+        .back-link::before {
+            content: "←";
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .description {
+            font-size: 16px;
+            line-height: 1.6;
+            opacity: 0.95;
+            max-width: 1100px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.85;
+            margin-top: 5px;
+        }
+
+        .controls {
+            padding: 25px 40px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .filter-group select {
+            padding: 10px 14px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .view-tabs {
+            padding: 0 40px;
+            background: white;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            gap: 5px;
+        }
+
+        .tab-button {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.2s;
+            position: relative;
+            top: 2px;
+        }
+
+        .tab-button:hover {
+            color: #495057;
+            background: #f8f9fa;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .content-area {
+            padding: 40px;
+            min-height: 600px;
+        }
+
+        .view-panel {
+            display: none;
+        }
+
+        .view-panel.active {
+            display: block;
+        }
+
+        /* Model Cards View */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 25px;
+        }
+
+        .model-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .model-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .model-card-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .model-card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .model-card-subtitle {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .model-card-body {
+            padding: 20px;
+        }
+
+        .model-card-field {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        .model-card-field:last-child {
+            border-bottom: none;
+        }
+
+        .field-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #6c757d;
+        }
+
+        .field-value {
+            font-size: 14px;
+            color: #2d3748;
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .model-card-footer {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            text-align: center;
+        }
+
+        .expand-button {
+            background: none;
+            border: none;
+            color: #667eea;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 5px 10px;
+            transition: color 0.2s;
+        }
+
+        .expand-button:hover {
+            color: #5568d3;
+        }
+
+        .model-card-details {
+            display: none;
+            padding: 20px;
+            border-top: 2px solid #e9ecef;
+            background: #f8f9fa;
+        }
+
+        .model-card-details.expanded {
+            display: block;
+        }
+
+        .detail-section {
+            margin-bottom: 25px;
+        }
+
+        .detail-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #495057;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .detail-item {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .detail-item-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .detail-item-value {
+            font-size: 13px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        /* Comparison Table View */
+        .table-wrapper {
+            overflow-x: auto;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .comparison-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .comparison-table th {
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .comparison-table th:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .comparison-table th::after {
+            content: " ⇅";
+            opacity: 0.5;
+            font-size: 11px;
+        }
+
+        .comparison-table th.sorted-asc::after {
+            content: " ↑";
+            opacity: 1;
+        }
+
+        .comparison-table th.sorted-desc::after {
+            content: " ↓";
+            opacity: 1;
+        }
+
+        .comparison-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .comparison-table tbody tr:nth-child(even) {
+            background: #fafbfc;
+        }
+
+        .comparison-table tbody tr:nth-child(even):hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-primary {
+            background: #e7f0ff;
+            color: #667eea;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        /* Category Deep-Dive View */
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .category-tab {
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #495057;
+            transition: all 0.2s;
+        }
+
+        .category-tab:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .category-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .category-content {
+            display: none;
+        }
+
+        .category-content.active {
+            display: block;
+        }
+
+        .category-matrix {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .category-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .category-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .category-field {
+            margin-bottom: 12px;
+        }
+
+        .category-field-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .category-field-value {
+            font-size: 14px;
+            color: #2d3748;
+        }
+
+        .list-items {
+            list-style: none;
+            padding: 0;
+        }
+
+        .list-items li {
+            padding: 6px 0;
+            font-size: 13px;
+            color: #495057;
+        }
+
+        .list-items li::before {
+            content: "•";
+            color: #667eea;
+            font-weight: bold;
+            display: inline-block;
+            width: 1.2em;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .no-results-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .no-results-text {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header, .controls, .content-area {
+                padding: 20px;
+            }
+
+            .view-tabs {
+                padding: 0 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .stats {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .category-matrix {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="report.html" class="back-link">Back to Full Report</a>
+            <h1>Model Characteristics Explorer</h1>
+            <p class="description">
+                Comprehensive metadata for all 21 embedding models. Explore 60+ fields including
+                core specifications, benchmark scores, quantization details, technical specs,
+                usage metadata, and business information. Switch between different views to
+                analyze models from multiple perspectives.
+            </p>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value">21</div>
+                    <div class="stat-label">Embedding Models</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">60+</div>
+                    <div class="stat-label">Metadata Fields</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">6</div>
+                    <div class="stat-label">Field Categories</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search models by name, developer, architecture..." />
+            </div>
+            <div class="filter-group">
+                <label>Developer:</label>
+                <select id="filter-developer">
+                    <option value="">All Developers</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>License:</label>
+                <select id="filter-license">
+                    <option value="">All Licenses</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Country:</label>
+                <select id="filter-country">
+                    <option value="">All Countries</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="view-tabs">
+            <button class="tab-button active" data-view="cards">Model Cards</button>
+            <button class="tab-button" data-view="table">Comparison Table</button>
+            <button class="tab-button" data-view="categories">Category Deep-Dive</button>
+        </div>
+
+        <div class="content-area">
+            <!-- Model Cards View -->
+            <div id="view-cards" class="view-panel active">
+                <div id="cards-container" class="cards-grid"></div>
+            </div>
+
+            <!-- Comparison Table View -->
+            <div id="view-table" class="view-panel">
+                <div class="table-wrapper">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th data-sort="displayName">Model</th>
+                                <th data-sort="developer">Developer</th>
+                                <th data-sort="dimensions">Dimensions</th>
+                                <th data-sort="paramMillions">Parameters</th>
+                                <th data-sort="contextLength">Context Length</th>
+                                <th data-sort="mtebScore">MTEB Score</th>
+                                <th data-sort="beirScore">BEIR Score</th>
+                                <th data-sort="license">License</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Category Deep-Dive View -->
+            <div id="view-categories" class="view-panel">
+                <div class="category-tabs">
+                    <button class="category-tab active" data-category="core">Core Specs</button>
+                    <button class="category-tab" data-category="benchmarks">Benchmarks</button>
+                    <button class="category-tab" data-category="technical">Technical</button>
+                    <button class="category-tab" data-category="quantization">Quantization</button>
+                    <button class="category-tab" data-category="usage">Usage & Training</button>
+                    <button class="category-tab" data-category="business">Business</button>
+                </div>
+
+                <div id="category-core" class="category-content active">
+                    <div id="category-core-content" class="category-matrix"></div>
+                </div>
+
+                <div id="category-benchmarks" class="category-content">
+                    <div id="category-benchmarks-content" class="category-matrix"></div>
+                </div>
+
+                <div id="category-technical" class="category-content">
+                    <div id="category-technical-content" class="category-matrix"></div>
+                </div>
+
+                <div id="category-quantization" class="category-content">
+                    <div id="category-quantization-content" class="category-matrix"></div>
+                </div>
+
+                <div id="category-usage" class="category-content">
+                    <div id="category-usage-content" class="category-matrix"></div>
+                </div>
+
+                <div id="category-business" class="category-content">
+                    <div id="category-business-content" class="category-matrix"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let currentView = 'cards';
+        let currentCategory = 'core';
+        let filteredModels = [];
+        let sortColumn = null;
+        let sortDirection = 'asc';
+
+        // Initialize the model explorer
+        function initModelExplorer(models) {
+            console.log('Initializing with', models.length, 'models');
+            filteredModels = models;
+
+            // Populate filters
+            populateFilters(models);
+
+            // Render initial view
+            renderCardsView(filteredModels);
+            renderTableView(filteredModels);
+            renderCategoryView(filteredModels, 'core');
+
+            // Set up event listeners
+            setupEventListeners();
+        }
+
+        function populateFilters(models) {
+            // Get unique developers, licenses, and countries
+            const developers = [...new Set(models.map(m => m.developer))].sort();
+            const licenses = [...new Set(models.map(m => m.license))].sort();
+            const countries = [...new Set(models.map(m => m.countryOfOrigin).filter(c => c))].sort();
+
+            const devSelect = document.getElementById('filter-developer');
+            const licenseSelect = document.getElementById('filter-license');
+            const countrySelect = document.getElementById('filter-country');
+
+            developers.forEach(dev => {
+                const option = document.createElement('option');
+                option.value = dev;
+                option.textContent = dev;
+                devSelect.appendChild(option);
+            });
+
+            licenses.forEach(lic => {
+                const option = document.createElement('option');
+                option.value = lic;
+                option.textContent = lic;
+                licenseSelect.appendChild(option);
+            });
+
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                option.textContent = country;
+                countrySelect.appendChild(option);
+            });
+        }
+
+        function setupEventListeners() {
+            // View tabs
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentView = btn.dataset.view;
+                    switchView(currentView);
+                });
+            });
+
+            // Category tabs
+            document.querySelectorAll('.category-tab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentCategory = btn.dataset.category;
+                    switchCategory(currentCategory);
+                    renderCategoryView(filteredModels, currentCategory);
+                });
+            });
+
+            // Search
+            document.getElementById('search-input').addEventListener('input', applyFilters);
+
+            // Filters
+            document.getElementById('filter-developer').addEventListener('change', applyFilters);
+            document.getElementById('filter-license').addEventListener('change', applyFilters);
+            document.getElementById('filter-country').addEventListener('change', applyFilters);
+
+            // Table sorting
+            document.querySelectorAll('.comparison-table th[data-sort]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const column = th.dataset.sort;
+                    if (sortColumn === column) {
+                        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        sortColumn = column;
+                        sortDirection = 'asc';
+                    }
+                    sortTable(column, sortDirection);
+                });
+            });
+        }
+
+        function switchView(view) {
+            // Update tabs
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
+
+            // Update panels
+            document.querySelectorAll('.view-panel').forEach(panel => {
+                panel.classList.toggle('active', panel.id === `view-${view}`);
+            });
+        }
+
+        function switchCategory(category) {
+            // Update tabs
+            document.querySelectorAll('.category-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === category);
+            });
+
+            // Update content
+            document.querySelectorAll('.category-content').forEach(content => {
+                content.classList.toggle('active', content.id === `category-${category}`);
+            });
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const developer = document.getElementById('filter-developer').value;
+            const license = document.getElementById('filter-license').value;
+            const country = document.getElementById('filter-country').value;
+
+            filteredModels = window.modelsData.filter(model => {
+                const matchesSearch = !searchTerm ||
+                    model.displayName.toLowerCase().includes(searchTerm) ||
+                    model.developer.toLowerCase().includes(searchTerm) ||
+                    (model.architecture && model.architecture.toLowerCase().includes(searchTerm));
+
+                const matchesDeveloper = !developer || model.developer === developer;
+                const matchesLicense = !license || model.license === license;
+                const matchesCountry = !country || model.countryOfOrigin === country;
+
+                return matchesSearch && matchesDeveloper && matchesLicense && matchesCountry;
+            });
+
+            // Re-render current view
+            renderCardsView(filteredModels);
+            renderTableView(filteredModels);
+            renderCategoryView(filteredModels, currentCategory);
+        }
+
+        function renderCardsView(models) {
+            const container = document.getElementById('cards-container');
+
+            if (models.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <div class="no-results-text">No models found</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = models.map((model, idx) => `
+                <div class="model-card">
+                    <div class="model-card-header">
+                        <div class="model-card-title">${model.displayName}</div>
+                        <div class="model-card-subtitle">${model.developer}</div>
+                    </div>
+                    <div class="model-card-body">
+                        <div class="model-card-field">
+                            <span class="field-label">Dimensions</span>
+                            <span class="field-value">${model.dimensions.toLocaleString()}</span>
+                        </div>
+                        <div class="model-card-field">
+                            <span class="field-label">Parameters</span>
+                            <span class="field-value">${model.parameters || 'N/A'}</span>
+                        </div>
+                        <div class="model-card-field">
+                            <span class="field-label">Context Length</span>
+                            <span class="field-value">${model.contextLength ? model.contextLength.toLocaleString() : 'N/A'}</span>
+                        </div>
+                        <div class="model-card-field">
+                            <span class="field-label">License</span>
+                            <span class="field-value">${model.license}</span>
+                        </div>
+                        <div class="model-card-field">
+                            <span class="field-label">MTEB Score</span>
+                            <span class="field-value">${model.mtebScore || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="model-card-footer">
+                        <button class="expand-button" onclick="toggleDetails(${idx})">
+                            View Full Details ↓
+                        </button>
+                    </div>
+                    <div id="details-${idx}" class="model-card-details">
+                        ${renderModelDetails(model)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleDetails(idx) {
+            const details = document.getElementById(`details-${idx}`);
+            details.classList.toggle('expanded');
+
+            const button = details.previousElementSibling.querySelector('.expand-button');
+            if (details.classList.contains('expanded')) {
+                button.textContent = 'Hide Details ↑';
+            } else {
+                button.textContent = 'View Full Details ↓';
+            }
+        }
+
+        function renderModelDetails(model) {
+            return `
+                <div class="detail-section">
+                    <div class="detail-section-title">Core Information</div>
+                    <div class="detail-grid">
+                        ${renderDetailItem('Architecture', model.architecture)}
+                        ${renderDetailItem('Release Date', model.releaseDate)}
+                        ${renderDetailItem('Country', model.countryOfOrigin)}
+                        ${renderDetailItem('Description', model.description)}
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Benchmark Scores</div>
+                    <div class="detail-grid">
+                        ${renderDetailItem('MTEB Score', model.mtebScore)}
+                        ${renderDetailItem('MTEB English', model.mtebEnglishScore)}
+                        ${renderDetailItem('BEIR Score', model.beirScore)}
+                        ${renderDetailItem('MIRACL Score', model.miraclScore)}
+                        ${renderDetailItem('CLEF Score', model.clefScore)}
+                        ${renderDetailItem('LOCO Score', model.locoScore)}
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Technical Specifications</div>
+                    <div class="detail-grid">
+                        ${renderDetailItem('Model Size', model.modelSize)}
+                        ${renderDetailItem('Memory Footprint', model.memoryFootprint)}
+                        ${renderDetailItem('Inference Speed', model.inferenceSpeed)}
+                        ${renderDetailItem('Vocabulary Size', model.vocabularySize)}
+                        ${renderDetailItem('Hidden Size', model.hiddenSize)}
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="detail-section-title">Quantization</div>
+                    <div class="detail-grid">
+                        ${renderDetailItem('Quantization', model.quantization)}
+                        ${renderDetailItem('Strategy', model.quantizationStrategy)}
+                        ${renderDetailItem('Compression Ratio', model.compressionRatio)}
+                        ${renderDetailItem('Accuracy vs FP16', model.accuracyVsFp16)}
+                    </div>
+                </div>
+
+                ${Array.isArray(model.languages) && model.languages.length > 0 ? `
+                <div class="detail-section">
+                    <div class="detail-section-title">Languages (${model.languages.length})</div>
+                    <ul class="list-items">
+                        ${Array.from(model.languages).slice(0, 10).map(lang => `<li>${lang}</li>`).join('')}
+                        ${model.languages.length > 10 ? `<li>... and ${model.languages.length - 10} more</li>` : ''}
+                    </ul>
+                </div>
+                ` : ''}
+
+                ${Array.isArray(model.useCases) && model.useCases.length > 0 ? `
+                <div class="detail-section">
+                    <div class="detail-section-title">Use Cases</div>
+                    <ul class="list-items">
+                        ${Array.from(model.useCases).map(uc => `<li>${uc}</li>`).join('')}
+                    </ul>
+                </div>
+                ` : ''}
+            `;
+        }
+
+        function renderDetailItem(label, value) {
+            if (!value || value === 'N/A') return '';
+
+            let displayValue = value;
+            if (typeof value === 'number' && value > 1000) {
+                displayValue = value.toLocaleString();
+            }
+
+            return `
+                <div class="detail-item">
+                    <div class="detail-item-label">${label}</div>
+                    <div class="detail-item-value">${displayValue}</div>
+                </div>
+            `;
+        }
+
+        function renderTableView(models) {
+            const tbody = document.getElementById('table-body');
+
+            if (models.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #6c757d;">
+                            No models found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = models.map(model => `
+                <tr>
+                    <td><strong>${model.displayName}</strong></td>
+                    <td>${model.developer}</td>
+                    <td>${model.dimensions.toLocaleString()}</td>
+                    <td>${model.parameters || 'N/A'}</td>
+                    <td>${model.contextLength ? model.contextLength.toLocaleString() : 'N/A'}</td>
+                    <td>${model.mtebScore || 'N/A'}</td>
+                    <td>${model.beirScore || 'N/A'}</td>
+                    <td><span class="badge badge-info">${model.license}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function sortTable(column, direction) {
+            // Update sort indicators
+            document.querySelectorAll('.comparison-table th').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+            });
+
+            const th = document.querySelector(`.comparison-table th[data-sort="${column}"]`);
+            th.classList.add(direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
+
+            // Sort models
+            filteredModels.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                // Handle null/undefined
+                if (!aVal && !bVal) return 0;
+                if (!aVal) return 1;
+                if (!bVal) return -1;
+
+                // Numeric comparison
+                if (typeof aVal === 'number' && typeof bVal === 'number') {
+                    return direction === 'asc' ? aVal - bVal : bVal - aVal;
+                }
+
+                // String comparison
+                aVal = String(aVal).toLowerCase();
+                bVal = String(bVal).toLowerCase();
+
+                if (direction === 'asc') {
+                    return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+                } else {
+                    return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
+                }
+            });
+
+            renderTableView(filteredModels);
+        }
+
+        function renderCategoryView(models, category) {
+            const container = document.getElementById(`category-${category}-content`);
+
+            if (models.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <div class="no-results-text">No models found</div>
+                    </div>
+                `;
+                return;
+            }
+
+            switch(category) {
+                case 'core':
+                    renderCoreSpecs(models, container);
+                    break;
+                case 'benchmarks':
+                    renderBenchmarks(models, container);
+                    break;
+                case 'technical':
+                    renderTechnical(models, container);
+                    break;
+                case 'quantization':
+                    renderQuantization(models, container);
+                    break;
+                case 'usage':
+                    renderUsage(models, container);
+                    break;
+                case 'business':
+                    renderBusiness(models, container);
+                    break;
+            }
+        }
+
+        function renderCoreSpecs(models, container) {
+            container.innerHTML = models.map(model => `
+                <div class="category-card">
+                    <div class="category-card-title">${model.displayName}</div>
+                    ${renderCategoryField('Dimensions', model.dimensions ? model.dimensions.toLocaleString() : 'N/A')}
+                    ${renderCategoryField('Parameters', model.parameters)}
+                    ${renderCategoryField('Context Length', model.contextLength ? model.contextLength.toLocaleString() : 'N/A')}
+                    ${renderCategoryField('Architecture', model.architecture)}
+                    ${renderCategoryField('Developer', model.developer)}
+                    ${renderCategoryField('License', model.license)}
+                    ${renderCategoryField('Country', model.countryOfOrigin)}
+                    ${renderCategoryField('Release Date', model.releaseDate)}
+                </div>
+            `).join('');
+        }
+
+        function renderBenchmarks(models, container) {
+            container.innerHTML = models.map(model => `
+                <div class="category-card">
+                    <div class="category-card-title">${model.displayName}</div>
+                    ${renderCategoryField('MTEB Score', model.mtebScore)}
+                    ${renderCategoryField('MTEB English', model.mtebEnglishScore)}
+                    ${renderCategoryField('MTEB English V2', model.mtebEnglishV2)}
+                    ${renderCategoryField('MTEB Multilingual', model.mtebMultilingualScore)}
+                    ${renderCategoryField('BEIR Score', model.beirScore)}
+                    ${renderCategoryField('MIRACL Score', model.miraclScore)}
+                    ${renderCategoryField('CLEF Score', model.clefScore)}
+                    ${renderCategoryField('LOCO Score', model.locoScore)}
+                    ${renderCategoryField('MKQA Recall', model.mkqaRecall)}
+                </div>
+            `).join('');
+        }
+
+        function renderTechnical(models, container) {
+            container.innerHTML = models.map(model => `
+                <div class="category-card">
+                    <div class="category-card-title">${model.displayName}</div>
+                    ${renderCategoryField('Model Size', model.modelSize)}
+                    ${renderCategoryField('Memory Footprint', model.memoryFootprint)}
+                    ${renderCategoryField('Memory Efficiency', model.memoryEfficiency)}
+                    ${renderCategoryField('Inference Speed', model.inferenceSpeed)}
+                    ${renderCategoryField('Vocabulary Size', model.vocabularySize)}
+                    ${renderCategoryField('Hidden Size', model.hiddenSize)}
+                    ${renderCategoryField('Intermediate Size', model.intermediateSize)}
+                    ${renderCategoryField('Sparse Dimensions', model.sparseDimensions)}
+                </div>
+            `).join('');
+        }
+
+        function renderQuantization(models, container) {
+            container.innerHTML = models.map(model => `
+                <div class="category-card">
+                    <div class="category-card-title">${model.displayName}</div>
+                    ${renderCategoryField('Quantization', model.quantization)}
+                    ${renderCategoryField('Strategy', model.quantizationStrategy)}
+                    ${renderCategoryField('Compression Ratio', model.compressionRatio)}
+                    ${renderCategoryField('Accuracy vs FP16', model.accuracyVsFp16)}
+                    ${renderCategoryField('Speed vs Accuracy', model.speedVsAccuracy)}
+                    ${renderCategoryField('QAT Advantage', model.qatAdvantage)}
+                </div>
+            `).join('');
+        }
+
+        function renderUsage(models, container) {
+            container.innerHTML = models.map(model => `
+                <div class="category-card">
+                    <div class="category-card-title">${model.displayName}</div>
+                    ${renderCategoryField('Best For', model.bestFor)}
+                    ${renderCategoryField('Training Data', model.trainingData)}
+                    ${Array.isArray(model.languages) && model.languages.length > 0 ? `
+                        <div class="category-field">
+                            <div class="category-field-label">Languages (${model.languages.length})</div>
+                            <div class="category-field-value">${Array.from(model.languages).slice(0, 5).join(', ')}${model.languages.length > 5 ? '...' : ''}</div>
+                        </div>
+                    ` : ''}
+                    ${Array.isArray(model.useCases) && model.useCases.length > 0 ? `
+                        <div class="category-field">
+                            <div class="category-field-label">Use Cases</div>
+                            <ul class="list-items">
+                                ${Array.from(model.useCases).slice(0, 5).map(uc => `<li>${uc}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                    ${Array.isArray(model.specialFeatures) && model.specialFeatures.length > 0 ? `
+                        <div class="category-field">
+                            <div class="category-field-label">Special Features</div>
+                            <ul class="list-items">
+                                ${Array.from(model.specialFeatures).map(sf => `<li>${sf}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderBusiness(models, container) {
+            container.innerHTML = models.map(model => `
+                <div class="category-card">
+                    <div class="category-card-title">${model.displayName}</div>
+                    ${renderCategoryField('License', model.license)}
+                    ${renderCategoryField('Developer', model.developer)}
+                    ${renderCategoryField('Country', model.countryOfOrigin)}
+                    ${renderCategoryField('IP Indemnity', model.ipIndemnity)}
+                    ${renderCategoryField('API Pricing', model.apiPricing)}
+                </div>
+            `).join('');
+        }
+
+        function renderCategoryField(label, value) {
+            if (!value || value === 'N/A') return '';
+
+            let displayValue = value;
+            if (typeof value === 'number' && value > 1000) {
+                displayValue = value.toLocaleString();
+            }
+
+            return `
+                <div class="category-field">
+                    <div class="category-field-label">${label}</div>
+                    <div class="category-field-value">${displayValue}</div>
+                </div>
+            `;
+        }
+
+        // Load model data and initialize
+        
+// Model characteristics data with all 60 fields
+(function() {
+    console.log('Initializing model characteristics explorer...');
+
+    try {
+        // All models with complete metadata
+        window.modelsData = [
+  {
+    "ollamaName": "all-minilm:22m",
+    "dimensions": 384,
+    "developer": "UKPLab (sentence-transformers)",
+    "license": "Apache 2.0",
+    "countryOfOrigin": "Germany",
+    "releaseDate": "2021-06-30",
+    "parameters": "22M",
+    "contextLength": 512,
+    "architecture": "MiniLM-L6-H384 (distilled BERT-like)",
+    "description": "Efficient lightweight embedding model that transforms sentences into 384-dimensional vectors. Distilled for speed while maintaining strong semantic understanding on short texts.",
+    "mtebScore": "58-62",
+    "mtebEnglishScore": null,
+    "mtebEnglishV2": null,
+    "mtebMultilingualScore": null,
+    "mtebCodeScore": null,
+    "cMtebScore": null,
+    "beirScore": null,
+    "miraclScore": null,
+    "clefScore": null,
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": 30522,
+    "hiddenSize": 384,
+    "intermediateSize": 1536,
+    "modelSize": "46MB (FP16), 22MB (optimized)",
+    "memoryFootprint": "~90MB RAM for inference",
+    "memoryEfficiency": "Highly memory-efficient, suitable for CPU-only environments",
+    "inferenceSpeed": "~5.3x faster than BERT-Base; thousands sentences/sec on CPU",
+    "sparseDimensions": null,
+    "quantization": "FP32, FP16",
+    "quantizationStrategy": "Standard PyTorch quantization",
+    "binaryQuantization": "Supported via sentence-transformers",
+    "sizeComparison": {
+      "FP32": "90MB",
+      "FP16": "46MB",
+      "optimized": "22MB"
+    },
+    "accuracyVsFp16": "Negligible degradation (<0.5%)",
+    "compressionRatio": "~4x (optimized vs FP32)",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "Excellent speed with good accuracy for size",
+    "performanceBreakdown": null,
+    "performanceByTask": null,
+    "performanceHighlights": "Strong on short texts, efficient semantic similarity",
+    "languagePerformance": "English-only, optimized for English tasks",
+    "retrievalPerformance": "Good performance on standard retrieval tasks",
+    "retrievalModes": [
+      "Dense retrieval"
+    ],
+    "scoringFormula": "Cosine similarity",
+    "trainingData": "1.17B+ sentence pairs from diverse sources including Reddit comments, S2ORC citations, WikiAnswers duplicates, PAQ pairs, Stack Exchange, MS MARCO, and more",
+    "languages": [
+      "English"
+    ],
+    "useCases": [
+      "Semantic textual similarity",
+      "Information retrieval",
+      "Text clustering",
+      "Paraphrase identification",
+      "Quick prototype development"
+    ],
+    "specialFeatures": [
+      "Distillation from larger BERT models",
+      "Mean pooling with attention mask",
+      "Automatic truncation for longer inputs",
+      "Contrastive fine-tuning on massive dataset",
+      "CPU-friendly inference"
+    ],
+    "bestFor": "Resource-constrained environments requiring fast semantic embeddings",
+    "queryPrompt": null,
+    "optionalPrompts": null,
+    "requiredPrompts": null,
+    "taskPrompts": null,
+    "instructionFormat": null,
+    "matryoshkaDimensions": null,
+    "matryoshkaPerformance": null,
+    "graniteEcosystem": null,
+    "improvementOverGTE": null,
+    "ipIndemnity": null,
+    "apiPricing": "Free (open-source)",
+    "displayName": "All-MiniLM (22M)",
+    "tableName": "emb_essays_all_minilm_22m",
+    "paramMillions": 22.0
+  },
+  {
+    "ollamaName": "all-minilm:33m",
+    "dimensions": 384,
+    "developer": "UKPLab (sentence-transformers)",
+    "license": "Apache 2.0",
+    "countryOfOrigin": "Germany",
+    "releaseDate": "2021-06-30",
+    "parameters": "33M",
+    "contextLength": 512,
+    "architecture": "MiniLM-L12-H384 (distilled BERT-like)",
+    "description": "Deeper variant of MiniLM with 12 layers for improved accuracy over the 6-layer version. Provides robust 384-dimensional embeddings for semantic tasks with minimal size increase.",
+    "mtebScore": "60-64",
+    "mtebEnglishScore": null,
+    "mtebEnglishV2": null,
+    "mtebMultilingualScore": null,
+    "mtebCodeScore": null,
+    "cMtebScore": null,
+    "beirScore": null,
+    "miraclScore": null,
+    "clefScore": null,
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": 30522,
+    "hiddenSize": 384,
+    "intermediateSize": 1536,
+    "modelSize": "~85-90MB",
+    "memoryFootprint": "~180MB RAM for inference",
+    "memoryEfficiency": "Memory-efficient with deeper architecture",
+    "inferenceSpeed": "~2.7x faster than BERT-Base; hundreds sentences/sec on CPU",
+    "sparseDimensions": null,
+    "quantization": "FP32, FP16",
+    "quantizationStrategy": "Standard PyTorch quantization",
+    "binaryQuantization": "Supported via sentence-transformers",
+    "sizeComparison": {
+      "FP32": "~132MB",
+      "FP16": "~90MB"
+    },
+    "accuracyVsFp16": "Negligible degradation (<0.5%)",
+    "compressionRatio": "~1.5x (FP16 vs FP32)",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "Good balance of speed and accuracy",
+    "performanceBreakdown": null,
+    "performanceByTask": null,
+    "performanceHighlights": "Better accuracy than 22m with minimal size increase",
+    "languagePerformance": "English-only, optimized for English tasks",
+    "retrievalPerformance": "Improved retrieval over 6-layer variant",
+    "retrievalModes": [
+      "Dense retrieval"
+    ],
+    "scoringFormula": "Cosine similarity",
+    "trainingData": "1.17B+ sentence pairs from diverse sources including Reddit comments, S2ORC citations, WikiAnswers duplicates, PAQ pairs, Stack Exchange, MS MARCO, and more",
+    "languages": [
+      "English"
+    ],
+    "useCases": [
+      "Advanced semantic search",
+      "Document clustering",
+      "Sentence similarity computation",
+      "Content recommendation",
+      "Duplicate detection"
+    ],
+    "specialFeatures": [
+      "Deeper architecture for better representation",
+      "Mean pooling with attention mask",
+      "Automatic truncation for longer inputs",
+      "Contrastive learning on billion-scale data",
+      "Balanced speed-accuracy tradeoff"
+    ],
+    "bestFor": "Applications needing better accuracy than tiny models without large overhead",
+    "queryPrompt": null,
+    "optionalPrompts": null,
+    "requiredPrompts": null,
+    "taskPrompts": null,
+    "instructionFormat": null,
+    "matryoshkaDimensions": null,
+    "matryoshkaPerformance": null,
+    "graniteEcosystem": null,
+    "improvementOverGTE": null,
+    "ipIndemnity": null,
+    "apiPricing": "Free (open-source)",
+    "displayName": "All-MiniLM (33M)",
+    "tableName": "emb_essays_all_minilm_33m",
+    "paramMillions": 33.0
+  },
+  {
+    "ollamaName": "snowflake-arctic-embed:22m",
+    "dimensions": 384,
+    "developer": "Snowflake Inc.",
+    "license": "Apache 2.0",
+    "countryOfOrigin": "USA",
+    "releaseDate": "2024-04-16",
+    "parameters": "22M",
+    "contextLength": 512,
+    "architecture": "Optimized MiniLM-L6 variant",
+    "description": "Ultra-compact embedding model excelling in retrieval tasks despite minimal size. Optimized for low-latency applications while achieving competitive benchmark scores.",
+    "mtebScore": 53.28,
+    "mtebEnglishScore": null,
+    "mtebEnglishV2": null,
+    "mtebMultilingualScore": null,
+    "mtebCodeScore": null,
+    "cMtebScore": null,
+    "beirScore": 50.15,
+    "miraclScore": null,
+    "clefScore": null,
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": "~30000",
+    "hiddenSize": 384,
+    "intermediateSize": 1536,
+    "modelSize": "~90MB",
+    "memoryFootprint": "~180MB RAM for inference",
+    "memoryEfficiency": "Optimized for low TCO and latency",
+    "inferenceSpeed": "Optimized for strictest latency/TCO budgets",
+    "sparseDimensions": null,
+    "quantization": "F16",
+    "quantizationStrategy": "Half precision",
+    "binaryQuantization": "Not specified",
+    "sizeComparison": {
+      "F16": "~90MB"
+    },
+    "accuracyVsFp16": "Baseline (trained in FP16)",
+    "compressionRatio": "Not specified",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "Optimized for strictest latency/TCO budgets",
+    "performanceBreakdown": {
+      "Retrieval": 50.15
+    },
+    "performanceByTask": null,
+    "performanceHighlights": "State-of-the-art for <25M parameter class",
+    "languagePerformance": "English-only, optimized for English tasks",
+    "retrievalPerformance": "BEIR: 50.15",
+    "retrievalModes": [
+      "Dense retrieval",
+      "Query-prefix optimized"
+    ],
+    "scoringFormula": "Cosine similarity with query prefix",
+    "trainingData": "400M+ query-document pairs from public datasets and web search, plus 1M hard-mined triplets",
+    "languages": [
+      "English"
+    ],
+    "useCases": [
+      "Real-time semantic search",
+      "Edge device RAG",
+      "Cost-sensitive embedding generation",
+      "Mobile applications",
+      "High-throughput systems"
+    ],
+    "specialFeatures": [
+      "Hard negative mining optimization",
+      "Query prefix support for better retrieval",
+      "State-of-the-art for <25M param class",
+      "Low TCO design",
+      "Easy integration with transformers libs"
+    ],
+    "bestFor": "Extreme efficiency in latency-critical retrieval",
+    "queryPrompt": "Represent this sentence for searching relevant passages: ",
+    "optionalPrompts": {
+      "query": "Represent this sentence for searching relevant passages: "
+    },
+    "requiredPrompts": null,
+    "taskPrompts": null,
+    "instructionFormat": "Represent this sentence for searching relevant passages: ",
+    "matryoshkaDimensions": null,
+    "matryoshkaPerformance": null,
+    "graniteEcosystem": null,
+    "improvementOverGTE": null,
+    "ipIndemnity": null,
+    "apiPricing": "Open-source (Snowflake Cortex pricing not disclosed)",
+    "displayName": "Snowflake Arctic (22M)",
+    "tableName": "emb_essays_snowflake_arctic_embed_22m",
+    "paramMillions": 22.0
+  },
+  {
+    "ollamaName": "snowflake-arctic-embed:110m",
+    "dimensions": 768,
+    "developer": "Snowflake Inc.",
+    "license": "Apache 2.0",
+    "countryOfOrigin": "USA",
+    "releaseDate": "2024-04-16",
+    "parameters": "110M",
+    "contextLength": 512,
+    "architecture": "E5-base-unsupervised variant",
+    "description": "Balanced medium-sized model providing high-quality embeddings for retrieval. Serves as reliable workhorse for production systems with strong benchmark performance. V1.5 (July 2024) adds Matryoshka and quantization. V2.0 (Dec 2024) adds multilingual support.",
+    "mtebScore": 54.9,
+    "mtebEnglishScore": null,
+    "mtebEnglishV2": null,
+    "mtebMultilingualScore": null,
+    "mtebCodeScore": null,
+    "cMtebScore": null,
+    "beirScore": 53.91,
+    "miraclScore": "55.2 (v2.0 multilingual variant)",
+    "clefScore": "52.9 (v2.0)",
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": "~30000",
+    "hiddenSize": 768,
+    "intermediateSize": 3072,
+    "modelSize": "~440MB",
+    "memoryFootprint": "~440MB RAM for inference",
+    "memoryEfficiency": "Good efficiency for medium-sized model",
+    "inferenceSpeed": "Production-grade latency",
+    "sparseDimensions": null,
+    "quantization": "F16",
+    "quantizationStrategy": "Half precision",
+    "binaryQuantization": "Not specified",
+    "sizeComparison": {
+      "F16": "~219MB"
+    },
+    "accuracyVsFp16": "Baseline (trained in FP16)",
+    "compressionRatio": "Not specified",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "Best retrieval performance without inference slowdown",
+    "performanceBreakdown": {
+      "Retrieval": "~54.9"
+    },
+    "performanceByTask": null,
+    "performanceHighlights": "Workhorse model with best retrieval performance without slowing inference",
+    "languagePerformance": "Supports 2 language(s)",
+    "retrievalPerformance": "Best in medium size class",
+    "retrievalModes": [
+      "Dense retrieval",
+      "Query-prefix optimized"
+    ],
+    "scoringFormula": "Cosine similarity with query prefix",
+    "trainingData": "400M+ query-document pairs from public and proprietary sources, optimized with 1M hard triplets",
+    "languages": [
+      "English",
+      "Multilingual support (v2.0: 74 languages)"
+    ],
+    "useCases": [
+      "Enterprise RAG systems",
+      "Document retrieval",
+      "Semantic similarity",
+      "Question answering",
+      "Knowledge base search"
+    ],
+    "specialFeatures": [
+      "Optimized for retrieval accuracy",
+      "Query prefix enhancement",
+      "Multilingual capability (v2.0)",
+      "CLS token pooling",
+      "Commercial usability",
+      "Matryoshka support (v1.5+)",
+      "Long context support up to 8192 tokens (v2.0)"
+    ],
+    "bestFor": "Production retrieval with balanced performance and speed",
+    "queryPrompt": "Represent this sentence for searching relevant passages: ",
+    "optionalPrompts": {
+      "query": "Represent this sentence for searching relevant passages: ",
+      "v2.0_query": "query: "
+    },
+    "requiredPrompts": null,
+    "taskPrompts": null,
+    "instructionFormat": "Represent this sentence for searching relevant passages: ",
+    "matryoshkaDimensions": [
+      768,
+      256
+    ],
+    "matryoshkaPerformance": null,
+    "graniteEcosystem": null,
+    "improvementOverGTE": null,
+    "ipIndemnity": null,
+    "apiPricing": "Open-source (Snowflake Cortex pricing not disclosed)",
+    "displayName": "Snowflake Arctic (110M)",
+    "tableName": "emb_essays_snowflake_arctic_embed_110m",
+    "paramMillions": 110.0
+  },
+  {
+    "ollamaName": "snowflake-arctic-embed:137m",
+    "dimensions": 768,
+    "developer": "Snowflake Inc.",
+    "license": "Apache 2.0",
+    "countryOfOrigin": "USA",
+    "releaseDate": "2024-04-16",
+    "parameters": "137M",
+    "contextLength": 2048,
+    "architecture": "Nomic-embed-text-unsupervised with RPE",
+    "description": "Long-context variant enabling embedding of extended documents. Maintains high retrieval quality with support for up to 8K tokens via rotary position embeddings.",
+    "mtebScore": 54.83,
+    "mtebEnglishScore": null,
+    "mtebEnglishV2": null,
+    "mtebMultilingualScore": null,
+    "mtebCodeScore": null,
+    "cMtebScore": null,
+    "beirScore": 53.91,
+    "miraclScore": null,
+    "clefScore": null,
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": "~30000",
+    "hiddenSize": 768,
+    "intermediateSize": 3072,
+    "modelSize": "~440MB",
+    "memoryFootprint": "~550MB RAM for inference",
+    "memoryEfficiency": "Optimized for long-context workloads",
+    "inferenceSpeed": "Optimized for long documents",
+    "sparseDimensions": null,
+    "quantization": "F16",
+    "quantizationStrategy": "Half precision",
+    "binaryQuantization": "Not specified",
+    "sizeComparison": {
+      "F16": "~274MB"
+    },
+    "accuracyVsFp16": "Baseline (trained in FP16)",
+    "compressionRatio": "Not specified",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "Balanced for long-context tasks",
+    "performanceBreakdown": null,
+    "performanceByTask": null,
+    "performanceHighlights": "Long-context variant perfect for workloads constrained by 512 token limit",
+    "languagePerformance": "English-only, optimized for English tasks",
+    "retrievalPerformance": "Similar to 110m with extended context",
+    "retrievalModes": [
+      "Dense retrieval",
+      "Long-context retrieval"
+    ],
+    "scoringFormula": "Cosine similarity",
+    "trainingData": "400M+ query-document pairs from public and proprietary sources, optimized with 1M hard triplets",
+    "languages": [
+      "English"
+    ],
+    "useCases": [
+      "Long-document RAG",
+      "Extended context search",
+      "Legal/tech doc retrieval",
+      "Research paper embedding",
+      "Multi-page analysis"
+    ],
+    "specialFeatures": [
+      "Rotary Position Embedding for 8K context",
+      "Fallback to 2K without RPE",
+      "Hard negative optimization",
+      "Query prefix support",
+      "Multilingual optimization"
+    ],
+    "bestFor": "Long-context retrieval in performance-sensitive apps",
+    "queryPrompt": "Represent this sentence for searching relevant passages: ",
+    "optionalPrompts": {
+      "query": "Represent this sentence for searching relevant passages: "
+    },
+    "requiredPrompts": null,
+    "taskPrompts": null,
+    "instructionFormat": "Represent this sentence for searching relevant passages: ",
+    "matryoshkaDimensions": null,
+    "matryoshkaPerformance": null,
+    "graniteEcosystem": null,
+    "improvementOverGTE": null,
+    "ipIndemnity": null,
+    "apiPricing": "Open-source (Snowflake Cortex pricing not disclosed)",
+    "displayName": "Snowflake Arctic (137M)",
+    "tableName": "emb_essays_snowflake_arctic_embed_137m",
+    "paramMillions": 137.0
+  },
+  {
+    "ollamaName": "snowflake-arctic-embed:335m",
+    "dimensions": 1024,
+    "developer": "Snowflake Inc.",
+    "license": "Apache 2.0",
+    "countryOfOrigin": "USA",
+    "releaseDate": "2024-04-16",
+    "parameters": "335M",
+    "contextLength": 512,
+    "architecture": "E5-large-unsupervised variant",
+    "description": "High-performance large model rivaling closed-source alternatives. Delivers top-tier retrieval accuracy for demanding applications. V2.0 (Dec 2024) adds multilingual support and extended context.",
+    "mtebScore": 55.98,
+    "mtebEnglishScore": null,
+    "mtebEnglishV2": null,
+    "mtebMultilingualScore": null,
+    "mtebCodeScore": null,
+    "cMtebScore": null,
+    "beirScore": 55.98,
+    "miraclScore": "55.8 (v2.0)",
+    "clefScore": "54.3 (v2.0)",
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": "~30000",
+    "hiddenSize": 1024,
+    "intermediateSize": 4096,
+    "modelSize": "~1.3GB",
+    "memoryFootprint": "~1.3GB RAM for inference",
+    "memoryEfficiency": "High accuracy with reasonable memory footprint",
+    "inferenceSpeed": "Higher latency, maximum quality",
+    "sparseDimensions": null,
+    "quantization": "F16",
+    "quantizationStrategy": "Half precision",
+    "binaryQuantization": "Not specified",
+    "sizeComparison": {
+      "F16": "~669MB"
+    },
+    "accuracyVsFp16": "Baseline (trained in FP16)",
+    "compressionRatio": "Not specified",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "High accuracy, good inference speed",
+    "performanceBreakdown": {
+      "Retrieval": 55.98
+    },
+    "performanceByTask": null,
+    "performanceHighlights": "Direct replacement for closed-source models, outperforms Google-gecko and text-embedding-3-large",
+    "languagePerformance": "Supports 2 language(s)",
+    "retrievalPerformance": "BEIR: 55.98 - Top open-source performance",
+    "retrievalModes": [
+      "Dense retrieval"
+    ],
+    "scoringFormula": "Cosine similarity",
+    "trainingData": "400M+ query-document pairs from public and proprietary sources, optimized with 1M hard triplets",
+    "languages": [
+      "English",
+      "Multilingual support (v2.0: 74 languages)"
+    ],
+    "useCases": [
+      "Advanced semantic search",
+      "High-accuracy RAG",
+      "Production-critical retrieval",
+      "Research benchmarking",
+      "Quality-focused applications"
+    ],
+    "specialFeatures": [
+      "SOTA for models <1B params (April 2024)",
+      "Query prefix enhancement",
+      "Hard negative mining",
+      "Production-grade quality",
+      "Commercial-friendly license",
+      "Matryoshka support (v2.0)",
+      "Long context 8192 tokens (v2.0)"
+    ],
+    "bestFor": "Maximum quality retrieval under 1B parameters",
+    "queryPrompt": "Represent this sentence for searching relevant passages: ",
+    "optionalPrompts": {
+      "query": "Represent this sentence for searching relevant passages: ",
+      "v2.0_query": "query: "
+    },
+    "requiredPrompts": null,
+    "taskPrompts": null,
+    "instructionFormat": "Represent this sentence for searching relevant passages: ",
+    "matryoshkaDimensions": [
+      1024,
+      256
+    ],
+    "matryoshkaPerformance": null,
+    "graniteEcosystem": null,
+    "improvementOverGTE": null,
+    "ipIndemnity": null,
+    "apiPricing": "Open-source (Snowflake Cortex pricing not disclosed)",
+    "displayName": "Snowflake Arctic (335M)",
+    "tableName": "emb_essays_snowflake_arctic_embed_335m",
+    "paramMillions": 335.0
+  },
+  {
+    "ollamaName": "granite-embedding:30m-en-fp16",
+    "dimensions": 384,
+    "developer": "IBM Research / IBM Granite Team",
+    "license": "Apache 2.0",
+    "countryOfOrigin": "USA",
+    "releaseDate": "2024-12-18",
+    "parameters": "30M",
+    "contextLength": 512,
+    "architecture": "RoBERTa-like (6 layers, 384 hidden size)",
+    "description": "Compact English-only model optimized for commercial deployments with full IP indemnification. Integrates seamlessly with IBM Granite AI ecosystem.",
+    "mtebScore": 56.5,
+    "mtebEnglishScore": 49.1,
+    "mtebEnglishV2": null,
+    "mtebMultilingualScore": "N/A - English only",
+    "mtebCodeScore": "N/A - not code-focused",
+    "cMtebScore": "N/A - English only",
+    "beirScore": 49.1,
+    "miraclScore": "N/A - English only",
+    "clefScore": "N/A - English only",
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": 50265,
+    "hiddenSize": 384,
+    "intermediateSize": 1536,
+    "modelSize": "Not disclosed",
+    "memoryFootprint": "~Not disclosed + overhead for inference",
+    "memoryEfficiency": "Standard efficiency for model class",
+    "inferenceSpeed": "0.16s on A100 GPU",
+    "sparseDimensions": null,
+    "quantization": "fp16",
+    "quantizationStrategy": "Standard floating point or PyTorch quantization",
+    "binaryQuantization": null,
+    "sizeComparison": {
+      "default": "Not disclosed"
+    },
+    "accuracyVsFp16": "Baseline or negligible degradation",
+    "compressionRatio": "Not specified",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "Good balance for model class",
+    "performanceBreakdown": {
+      "ArguAna": 56.4,
+      "FEVER": 85.5,
+      "Quora": 86.7,
+      "SciFact": 71.5,
+      "TREC-COVID": 77.8,
+      "CoIR": 47.0
+    },
+    "performanceByTask": null,
+    "performanceHighlights": null,
+    "languagePerformance": "English-only, optimized for English tasks",
+    "retrievalPerformance": {
+      "BEIR_avg": 49.1,
+      "CoIR": 47.0
+    },
+    "retrievalModes": [
+      "Dense retrieval"
+    ],
+    "scoringFormula": "Cosine similarity",
+    "trainingData": "218M pairs: 140M unsupervised + 52.8M supervised (MS-MARCO) + 17.8M code + 7.2M domain-specific",
+    "languages": [
+      "English"
+    ],
+    "useCases": [
+      "Enterprise RAG pipelines",
+      "Code search and retrieval",
+      "Legal-compliant applications",
+      "IBM Granite ecosystem integration",
+      "Commercially-licensed AI systems"
+    ],
+    "specialFeatures": [
+      "Uncapped IP indemnity from IBM",
+      "MS-MARCO trained for retrieval",
+      "Code retrieval capabilities",
+      "Integration with Granite LLM/Guardian",
+      "Commercial training data only"
+    ],
+    "bestFor": "High-speed enterprise applications with legal compliance",
+    "queryPrompt": null,
+    "optionalPrompts": null,
+    "requiredPrompts": null,
+    "taskPrompts": null,
+    "instructionFormat": null,
+    "matryoshkaDimensions": null,
+    "matryoshkaPerformance": null,
+    "graniteEcosystem": [
+      "Docling",
+      "Granite LLM",
+      "Granite Guardian",
+      "Bee Framework"
+    ],
+    "improvementOverGTE": null,
+    "ipIndemnity": "Uncapped",
+    "apiPricing": "Open-source (watsonx.ai pricing not disclosed)",
+    "displayName": "Granite (30M FP16)",
+    "tableName": "emb_essays_granite_embedding_30m_fp16",
+    "paramMillions": 30.0
+  },
+  {
+    "ollamaName": "granite-embedding:278m-fp16",
+    "dimensions": 768,
+    "developer": "IBM Research / IBM Granite Team",
+    "license": "Apache 2.0",
+    "countryOfOrigin": "USA",
+    "releaseDate": "2024-12-18",
+    "parameters": "278M",
+    "contextLength": 512,
+    "architecture": "XLM-RoBERTa-like (12 layers, 768 hidden size)",
+    "description": "Enterprise multilingual model supporting 12 languages with commercial-only training data. Integrated with IBM's comprehensive Granite AI stack.",
+    "mtebScore": 58.3,
+    "mtebEnglishScore": 48.2,
+    "mtebEnglishV2": 48.2,
+    "mtebMultilingualScore": null,
+    "mtebCodeScore": null,
+    "cMtebScore": null,
+    "beirScore": 49.5,
+    "miraclScore": 58.3,
+    "clefScore": null,
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": 250002,
+    "hiddenSize": 768,
+    "intermediateSize": 3072,
+    "modelSize": "Not disclosed",
+    "memoryFootprint": "~Not disclosed + overhead for inference",
+    "memoryEfficiency": "Standard efficiency for model class",
+    "inferenceSpeed": "0.67s on A100 GPU",
+    "sparseDimensions": null,
+    "quantization": "fp16",
+    "quantizationStrategy": "Standard floating point or PyTorch quantization",
+    "binaryQuantization": null,
+    "sizeComparison": {
+      "default": "Not disclosed"
+    },
+    "accuracyVsFp16": "Baseline or negligible degradation",
+    "compressionRatio": "Not specified",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "Good balance for model class",
+    "performanceBreakdown": {
+      "MIRACL_AR": 64.2,
+      "MIRACL_BN": 68.1,
+      "MIRACL_TE": 79.2,
+      "MIRACL_DE": 71.2,
+      "MIRACL_KO": 71.8,
+      "CoIR": 45.3
+    },
+    "performanceByTask": null,
+    "performanceHighlights": null,
+    "languagePerformance": {
+      "German": 71.2,
+      "Korean": 71.8,
+      "Arabic": 64.2,
+      "Japanese": 61.7,
+      "English": 48.2,
+      "Chinese": 45.2,
+      "Spanish": 52.6,
+      "French": 54.1
+    },
+    "retrievalPerformance": "Standard retrieval performance for model class",
+    "retrievalModes": [
+      "Dense retrieval"
+    ],
+    "scoringFormula": "Cosine similarity",
+    "trainingData": "243M+ multilingual pairs: 140M unsupervised + 52.8M multilingual MC4 + 12.4M Webhose + commercial data",
+    "languages": [
+      "English",
+      "German",
+      "Spanish",
+      "French",
+      "Japanese",
+      "Portuguese",
+      "Arabic",
+      "Czech",
+      "Italian",
+      "Korean",
+      "Dutch",
+      "Chinese"
+    ],
+    "useCases": [
+      "Enterprise multilingual RAG",
+      "Legal-compliant global deployments",
+      "IBM Granite ecosystem integration",
+      "Cross-lingual enterprise search",
+      "Commercially-licensed AI systems"
+    ],
+    "specialFeatures": [
+      "Uncapped IP indemnity",
+      "Zero MS-MARCO training data",
+      "Integration with Granite LLM/Guardian",
+      "Commercial licensing transparency",
+      "12-language support"
+    ],
+    "bestFor": "Enterprise multilingual with legal compliance requirements",
+    "queryPrompt": null,
+    "optionalPrompts": null,
+    "requiredPrompts": null,
+    "taskPrompts": null,
+    "instructionFormat": null,
+    "matryoshkaDimensions": null,
+    "matryoshkaPerformance": null,
+    "graniteEcosystem": [
+      "Docling",
+      "Granite LLM",
+      "Granite Guardian",
+      "Bee Framework"
+    ],
+    "improvementOverGTE": null,
+    "ipIndemnity": "Uncapped",
+    "apiPricing": "Open-source (watsonx.ai pricing not disclosed)",
+    "displayName": "Granite (278M FP16)",
+    "tableName": "emb_essays_granite_embedding_278m_fp16",
+    "paramMillions": 278.0
+  },
+  {
+    "ollamaName": "mxbai-embed-large:335m",
+    "dimensions": 1024,
+    "developer": "Mixedbread AI (Berlin)",
+    "license": "Apache 2.0",
+    "countryOfOrigin": "Germany",
+    "releaseDate": "2024-03-08",
+    "parameters": "335M",
+    "contextLength": 512,
+    "architecture": "BERT-large (24 layers, 16 attention heads)",
+    "description": "Efficiency-optimized open-source leader with native binary quantization support. Achieves state-of-the-art for BERT-large sized models.",
+    "mtebScore": 64.68,
+    "mtebEnglishScore": 64.68,
+    "mtebEnglishV2": null,
+    "mtebMultilingualScore": "N/A - English only",
+    "mtebCodeScore": "N/A - not code-focused",
+    "cMtebScore": "N/A - English only",
+    "beirScore": 54.39,
+    "miraclScore": "N/A - English only",
+    "clefScore": "N/A - English only",
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": 30522,
+    "hiddenSize": 1024,
+    "intermediateSize": 4096,
+    "modelSize": "~670MB (FP16), ~1.3GB (FP32)",
+    "memoryFootprint": "~~670MB (FP16), ~1.3GB (FP32) + overhead for inference",
+    "memoryEfficiency": "Efficient for model size, optimized inference",
+    "inferenceSpeed": "Sub-100ms per sentence typical",
+    "sparseDimensions": null,
+    "quantization": "float32, float16, int8, uint8, binary, ubinary",
+    "quantizationStrategy": "Native binary quantization with 96%+ performance retention",
+    "binaryQuantization": {
+      "storageSavings": "32x",
+      "speedImprovement": "40x",
+      "performanceRetention": "96%+",
+      "infrastructureCostSavings": "Up to 97%"
+    },
+    "sizeComparison": {
+      "float32": "~1.3GB",
+      "float16": "~670MB",
+      "binary": "~21MB (32x savings)"
+    },
+    "accuracyVsFp16": "Baseline or negligible degradation",
+    "compressionRatio": "32x with binary quantization",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "40x faster with binary, 96%+ accuracy retention",
+    "performanceBreakdown": {
+      "Classification": 75.64,
+      "Clustering": 46.71,
+      "PairClassification": 87.2,
+      "Reranking": 60.11,
+      "Retrieval": 54.39,
+      "STS": 85.0
+    },
+    "performanceByTask": null,
+    "performanceHighlights": null,
+    "languagePerformance": "English-only, optimized for English tasks",
+    "retrievalPerformance": "BEIR: 54.39",
+    "retrievalModes": [
+      "Dense retrieval"
+    ],
+    "scoringFormula": "Cosine similarity",
+    "trainingData": "700M+ text pairs + 30M+ high-quality triplets (zero MTEB contamination)",
+    "languages": [
+      "English"
+    ],
+    "useCases": [
+      "Production RAG systems",
+      "Binary quantization deployments",
+      "Cost-critical infrastructure",
+      "High-volume retrieval",
+      "Matryoshka dimension reduction"
+    ],
+    "specialFeatures": [
+      "Native binary quantization design",
+      "32x storage savings + 40x faster retrieval",
+      "96%+ performance retention in binary",
+      "AnglE loss optimization",
+      "Zero MTEB benchmark contamination"
+    ],
+    "bestFor": "Binary quantization and extreme efficiency requirements",
+    "queryPrompt": "Represent this sentence for searching relevant passages: ",
+    "optionalPrompts": {
+      "retrieval": "Represent this sentence for searching relevant passages: {query}"
+    },
+    "requiredPrompts": null,
+    "taskPrompts": null,
+    "instructionFormat": "Represent this sentence for searching relevant passages: ",
+    "matryoshkaDimensions": [
+      1024,
+      512,
+      256,
+      128,
+      64
+    ],
+    "matryoshkaPerformance": {
+      "512d": "93% retention",
+      "256d": "~88% retention",
+      "512d_binary": "90%+ retention (64x efficiency)"
+    },
+    "graniteEcosystem": null,
+    "improvementOverGTE": null,
+    "ipIndemnity": null,
+    "apiPricing": "$0.10 per 1M tokens",
+    "displayName": "MxBai",
+    "tableName": "emb_essays_mxbai_embed_large",
+    "paramMillions": 335.0
+  },
+  {
+    "ollamaName": "qwen3-embedding:8b",
+    "dimensions": 4096,
+    "developer": "Qwen Team, Alibaba Cloud / DAMO Academy",
+    "license": "Apache 2.0",
+    "countryOfOrigin": "China",
+    "releaseDate": "2025-06-05",
+    "parameters": "8B",
+    "contextLength": 40960,
+    "architecture": "Qwen3 dual-encoder with MRL",
+    "description": "State-of-the-art flagship model achieving #1 on MTEB multilingual leaderboard. Highest quality in Qwen3 family with 4096 dimensions and industry-leading 32K context.",
+    "mtebScore": 70.58,
+    "mtebEnglishScore": {
+      "Task": 75.22,
+      "Type": 68.71
+    },
+    "mtebEnglishV2": 75.22,
+    "mtebMultilingualScore": {
+      "Task": 70.58,
+      "Type": 61.69
+    },
+    "mtebCodeScore": 80.68,
+    "cMtebScore": {
+      "Task": 73.84,
+      "Type": 75.0
+    },
+    "beirScore": null,
+    "miraclScore": null,
+    "clefScore": null,
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": 151936,
+    "hiddenSize": 4096,
+    "intermediateSize": "Not disclosed",
+    "modelSize": "Q4_K_M: 4.68GB, F16: 15.1GB",
+    "memoryFootprint": "F16: ~30GB, Q4_K_M: ~9GB RAM",
+    "memoryEfficiency": "Efficient with quantization, manageable on consumer hardware",
+    "inferenceSpeed": "Optimized for long-context processing",
+    "sparseDimensions": null,
+    "quantization": "Q4_K_M, Q5_K_M, Q6_K, Q8_0, F16",
+    "quantizationStrategy": "K-quant GGUF quantization",
+    "binaryQuantization": "Supported via GGUF quantization",
+    "sizeComparison": {
+      "Q4_K_M": "4.68GB",
+      "Q5_K_M": "5.42GB",
+      "Q6_K": "6.21GB",
+      "Q8_0": "8.05GB",
+      "F16": "15.1GB"
+    },
+    "accuracyVsFp16": "Baseline or negligible degradation",
+    "compressionRatio": "~3.2x (Q4_K_M vs F16)",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "Balanced, optimized for accuracy with acceptable speed",
+    "performanceBreakdown": {
+      "Classification": 90.43,
+      "SemanticSimilarity": 88.58,
+      "Retrieval": 69.44,
+      "ChineseRetrieval": 78.21,
+      "Clustering": 80.08,
+      "CodeRetrieval": 80.68,
+      "BitextMining": 80.89,
+      "STS": 81.08
+    },
+    "performanceByTask": {
+      "Classification": 90.43,
+      "SemanticSimilarity": 88.58,
+      "Retrieval": 69.44,
+      "ChineseRetrieval": 78.21,
+      "Clustering": 80.08,
+      "CodeRetrieval": 80.68,
+      "BitextMining": 80.89,
+      "STS": 81.08
+    },
+    "performanceHighlights": "#1 on MTEB multilingual leaderboard (70.58), 32K context support, 40% improvement over GTE-Qwen",
+    "languagePerformance": "Excellent across 119+ languages",
+    "retrievalPerformance": "69.44 on MTEB Retrieval, 78.21 on Chinese Retrieval",
+    "retrievalModes": [
+      "Dense retrieval",
+      "Instruction-aware"
+    ],
+    "scoringFormula": "Cosine similarity with instruction prefix",
+    "trainingData": "~150M synthetic multilingual pairs via Qwen3-32B LLM",
+    "languages": "119+ natural and programming languages",
+    "useCases": [
+      "State-of-the-art multilingual RAG",
+      "Ultra-long context retrieval",
+      "Code and technical documentation",
+      "Research and benchmarking",
+      "Mission-critical accuracy applications"
+    ],
+    "specialFeatures": [
+      "#1 on MTEB multilingual (70.58)",
+      "32,768 token context length",
+      "4096-dimensional embeddings",
+      "SLERP model merging",
+      "Synthetic LLM-generated training data",
+      "Instruction-aware embeddings"
+    ],
+    "bestFor": "Maximum accuracy multilingual retrieval with 32K context",
+    "queryPrompt": "Instruct: {task_description}\nQuery: {query}",
+    "optionalPrompts": null,
+    "requiredPrompts": null,
+    "taskPrompts": {
+      "instruction_format": "Instruct: {task_description}\nQuery: {query}"
+    },
+    "instructionFormat": "Instruct: {task_description}\nQuery: {query}",
+    "matryoshkaDimensions": [
+      4096,
+      3072,
+      2560,
+      2048,
+      1536,
+      1024,
+      512,
+      256,
+      128,
+      64,
+      32
+    ],
+    "matryoshkaPerformance": "Supports 32 to 4096 dimensions",
+    "graniteEcosystem": null,
+    "improvementOverGTE": "40% improvement over GTE-Qwen predecessor",
+    "ipIndemnity": null,
+    "apiPricing": "Alibaba Cloud pricing not disclosed",
+    "displayName": "Qwen3 (8B)",
+    "tableName": "emb_essays_qwen3_embedding_8b",
+    "paramMillions": 8000.0
+  },
+  {
+    "ollamaName": "qwen3-embedding:4b",
+    "dimensions": 2560,
+    "developer": "Qwen Team, Alibaba Cloud / DAMO Academy",
+    "license": "Apache 2.0",
+    "countryOfOrigin": "China",
+    "releaseDate": "2025-06-05",
+    "parameters": "4B",
+    "contextLength": 40960,
+    "architecture": "Qwen3 dual-encoder with MRL",
+    "description": "Aggressive 4-bit quantization variant for maximum compression. Optimal choice for storage-constrained deployments requiring strong performance.",
+    "mtebScore": 69.45,
+    "mtebEnglishScore": {
+      "Task": 74.6,
+      "Type": 68.1
+    },
+    "mtebEnglishV2": null,
+    "mtebMultilingualScore": {
+      "Task": 69.45,
+      "Type": 60.86
+    },
+    "mtebCodeScore": null,
+    "cMtebScore": {
+      "Task": 72.27,
+      "Type": 73.51
+    },
+    "beirScore": null,
+    "miraclScore": null,
+    "clefScore": null,
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": "Not disclosed",
+    "hiddenSize": "Not disclosed",
+    "intermediateSize": "Not disclosed",
+    "modelSize": "Q4_K_M: ~2.5GB",
+    "memoryFootprint": "Q4_K_M: ~5GB RAM",
+    "memoryEfficiency": "Highly efficient with 4-bit quantization",
+    "inferenceSpeed": "Faster than 8B variant due to quantization",
+    "sparseDimensions": null,
+    "quantization": "q4_K_M (4-bit K-quant medium)",
+    "quantizationStrategy": "K-quant mixed precision (4-bit with selective higher precision)",
+    "binaryQuantization": "Supported via GGUF quantization",
+    "sizeComparison": {
+      "Q4_K_M": "~2.5GB",
+      "Q5_K_M": "2.89GB",
+      "Q6_K": "3.31GB",
+      "Q8_0": "~4.28GB",
+      "F16": "~8GB"
+    },
+    "accuracyVsFp16": "~1-2% degradation vs FP16",
+    "compressionRatio": "~3.2x (Q4_K_M vs F16)",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "Faster inference with minimal quality loss",
+    "performanceBreakdown": {
+      "BitextMining": 79.36,
+      "Classification": 72.33,
+      "Clustering": 57.15,
+      "Retrieval": 69.6,
+      "STS": 80.86
+    },
+    "performanceByTask": {
+      "BitextMining": 79.36,
+      "Classification": 72.33,
+      "Clustering": 57.15,
+      "Retrieval": 69.6,
+      "STS": 80.86
+    },
+    "performanceHighlights": "Excellent performance despite aggressive 4-bit quantization",
+    "languagePerformance": "Strong across 100+ languages",
+    "retrievalPerformance": "69.60 on retrieval tasks",
+    "retrievalModes": [
+      "Dense retrieval",
+      "Instruction-aware"
+    ],
+    "scoringFormula": "Cosine similarity with instruction prefix",
+    "trainingData": "~150M synthetic multilingual pairs via Qwen3-32B LLM",
+    "languages": "119+ natural and programming languages",
+    "useCases": [
+      "Storage-constrained servers",
+      "Consumer hardware deployment",
+      "Cost-optimized cloud inference",
+      "Mobile-edge hybrid architectures",
+      "Bandwidth-limited systems"
+    ],
+    "specialFeatures": [
+      "4-bit K-quant medium quantization",
+      "~40% smaller than q8_0 variant",
+      "32K context in compact package",
+      "K-quant mixed precision strategy",
+      "Balanced size/quality tradeoff",
+      "Instruction-aware embeddings"
+    ],
+    "bestFor": "Maximum compression while maintaining competitive quality",
+    "queryPrompt": "Instruct: {task_description}\nQuery: {query}",
+    "optionalPrompts": null,
+    "requiredPrompts": null,
+    "taskPrompts": {
+      "instruction_format": "Instruct: {task_description}\nQuery: {query}"
+    },
+    "instructionFormat": "Instruct: {task_description}\nQuery: {query}",
+    "matryoshkaDimensions": [
+      2560,
+      2048,
+      1536,
+      1024,
+      512,
+      256,
+      128,
+      64,
+      32
+    ],
+    "matryoshkaPerformance": "Supports 32 to 2560 dimensions",
+    "graniteEcosystem": null,
+    "improvementOverGTE": null,
+    "ipIndemnity": null,
+    "apiPricing": "Alibaba Cloud pricing not disclosed",
+    "displayName": "Qwen3 (4B Q4)",
+    "tableName": "emb_essays_qwen3_embedding_4b_q4_K_M",
+    "paramMillions": 4000.0
+  },
+  {
+    "ollamaName": "nomic-embed-text:v1.5",
+    "dimensions": 768,
+    "developer": "Nomic AI",
+    "license": "Apache 2.0",
+    "countryOfOrigin": "USA",
+    "releaseDate": "2024-02-01",
+    "parameters": "137M",
+    "contextLength": 2048,
+    "architecture": "Modified BERT-base with RoPE, SwiGLU, Flash Attention",
+    "description": "High-efficiency 137M parameter embedding model with 8192-token context via RoPE. Features Matryoshka Representation Learning enabling flexible dimension truncation from 768d to 64d with minimal performance loss. Outperforms OpenAI ada-002 using 70x fewer parameters.",
+    "mtebScore": 62.28,
+    "mtebEnglishScore": {
+      "768d": 62.28,
+      "512d": 61.96,
+      "256d": 60.54,
+      "128d": 59.34
+    },
+    "mtebEnglishV2": null,
+    "mtebMultilingualScore": null,
+    "mtebCodeScore": null,
+    "cMtebScore": null,
+    "beirScore": null,
+    "miraclScore": null,
+    "clefScore": null,
+    "locoScore": 85.53,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": 30522,
+    "hiddenSize": 768,
+    "intermediateSize": 3072,
+    "modelSize": "~550MB (F32), ~275MB (F16), 48-262 MiB (GGUF quantized)",
+    "memoryFootprint": "~275MB for F16, ~140MB for Q8_0",
+    "memoryEfficiency": "Highly efficient with Matryoshka and GGUF quantization",
+    "inferenceSpeed": ">100 queries/sec on M2 MacBook",
+    "sparseDimensions": null,
+    "quantization": "F32, F16, GGUF (Q2_K to Q8_0)",
+    "quantizationStrategy": "GGUF quantization with K-quant variants",
+    "binaryQuantization": "Supported via thresholding for 32x storage reduction",
+    "sizeComparison": {
+      "F32": "~550MB",
+      "F16": "~275MB",
+      "Q8_0": "~140MB",
+      "Q4_K_M": "~80MB",
+      "Q2_K": "~48MB"
+    },
+    "accuracyVsFp16": "Minimal degradation with GGUF quantization",
+    "compressionRatio": "~4x (Q8_0 vs F16), ~11x (Q2_K vs F32)",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "Excellent speed with strong accuracy at 137M parameters",
+    "performanceBreakdown": {
+      "Classification": 74.1,
+      "STS": 82.1,
+      "PairClassification": 85.2,
+      "Retrieval": 52.8,
+      "Clustering": 43.9,
+      "Reranking": 55.7
+    },
+    "performanceByTask": {
+      "Classification": 74.1,
+      "STS": 82.1,
+      "PairClassification": 85.2,
+      "Retrieval": 52.8,
+      "Clustering": 43.9,
+      "Reranking": 55.7
+    },
+    "performanceHighlights": "85.53 LoCo benchmark, outperforms OpenAI ada-002, 512d maintains 99.5% performance",
+    "languagePerformance": "English-only, optimized for production RAG",
+    "retrievalPerformance": "52.8 retrieval score, strong long-context capabilities",
+    "retrievalModes": [
+      "Dense retrieval"
+    ],
+    "scoringFormula": "Cosine similarity",
+    "trainingData": "235M filtered pairs from BooksCorpus, Wikipedia 2023, Reddit, PAQ, Amazon Reviews, S2ORC, MSMarco, NQ with reproducible pipeline",
+    "languages": [
+      "English"
+    ],
+    "useCases": [
+      "Production RAG systems",
+      "Cost-sensitive embedding generation",
+      "Long-context document processing",
+      "Semantic search and clustering",
+      "Real-time retrieval applications"
+    ],
+    "specialFeatures": [
+      "8192-token context via RoPE",
+      "Matryoshka learning (5 dimension levels)",
+      "Flash Attention optimization",
+      "Dynamic NTK-Aware RoPE scaling",
+      "Binary embedding support via thresholding",
+      "Task-specific prefix system"
+    ],
+    "bestFor": "Cost-effective long-context retrieval with flexible dimensionality",
+    "queryPrompt": "search_query: {query}",
+    "optionalPrompts": null,
+    "requiredPrompts": {
+      "query": "search_query:",
+      "document": "search_document:",
+      "clustering": "clustering:",
+      "classification": "classification:"
+    },
+    "taskPrompts": {
+      "query": "search_query:",
+      "document": "search_document:",
+      "clustering": "clustering:",
+      "classification": "classification:"
+    },
+    "instructionFormat": "Task-specific prefixes required for optimal performance",
+    "matryoshkaDimensions": [
+      768,
+      512,
+      256,
+      128,
+      64
+    ],
+    "matryoshkaPerformance": "768d: 62.28 | 512d: 61.96 (99.5%) | 256d: 60.54 | 128d: 59.34",
+    "graniteEcosystem": null,
+    "improvementOverGTE": null,
+    "ipIndemnity": null,
+    "apiPricing": "Free (open-source)",
+    "displayName": "Nomic Embed Text V1.5 (137M)",
+    "tableName": "emb_essays_nomic_embed_text_v1.5_137m",
+    "paramMillions": 137.0
+  },
+  {
+    "ollamaName": "snowflake-arctic-embed2:568m",
+    "dimensions": 1024,
+    "developer": "Snowflake Inc.",
+    "license": "Apache 2.0",
+    "countryOfOrigin": "USA",
+    "releaseDate": "2024-12-04",
+    "parameters": "568M",
+    "contextLength": 8192,
+    "architecture": "XLM-RoBERTa Large with RetroMAE pretraining",
+    "description": "Enterprise-grade multilingual embedding model maintaining top-tier English performance (55.6 BEIR) while supporting 100+ languages. Features Matryoshka learning at 256d achieving 98% performance retention with 4x compression. Optimized for large-scale retrieval with INT4 quantization support.",
+    "mtebScore": 55.6,
+    "mtebEnglishScore": {
+      "BEIR": 55.6,
+      "1024d": 55.6,
+      "256d": 54.3
+    },
+    "mtebEnglishV2": null,
+    "mtebMultilingualScore": {
+      "MIRACL": 55.8,
+      "CLEF_5_langs": 52.9,
+      "CLEF_all": 54.3
+    },
+    "mtebCodeScore": null,
+    "cMtebScore": null,
+    "beirScore": 55.6,
+    "miraclScore": 55.8,
+    "clefScore": 54.3,
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": "~250000",
+    "hiddenSize": 1024,
+    "intermediateSize": 4096,
+    "modelSize": "1.2GB (FP16)",
+    "memoryFootprint": "~1.2GB base, 2KB per vector (1024d FP16), 128 bytes with MRL+INT4",
+    "memoryEfficiency": "Highly efficient with MRL and scalar quantization",
+    "inferenceSpeed": ">100 docs/sec on NVIDIA A10, <10ms query latency",
+    "sparseDimensions": null,
+    "quantization": "FP16, INT8, INT4",
+    "quantizationStrategy": "Scalar quantization with recommended ranges: -0.18 to +0.18 for 4-bit",
+    "binaryQuantization": "Supported via INT4/INT8 scalar quantization",
+    "sizeComparison": {
+      "FP16": "1.2GB",
+      "1024d_FP16_per_vector": "2KB",
+      "256d_INT4_per_vector": "128 bytes"
+    },
+    "accuracyVsFp16": "INT4: 99% retention at 256d, INT8: 99.5%+ retention",
+    "compressionRatio": "96x compression (256d INT4 vs 1024d FP16), 4x with MRL alone",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "<10ms latency with strong accuracy, optimized for throughput",
+    "performanceBreakdown": {
+      "BEIR_English": 55.6,
+      "MIRACL_Multilingual": 55.8,
+      "CLEF_European": 54.3
+    },
+    "performanceByTask": {
+      "BEIR_English": 55.6,
+      "MIRACL_Multilingual": 55.8,
+      "CLEF_5_langs": 52.9,
+      "CLEF_all": 54.3
+    },
+    "performanceHighlights": "Best-in-class for <1B multilingual models, 98% retention at 256d, superior compression vs Google/OpenAI",
+    "languagePerformance": "Strong across 100+ languages with maintained English performance",
+    "retrievalPerformance": "55.6 BEIR English, 55.8 MIRACL multilingual, 54.3 CLEF European",
+    "retrievalModes": [
+      "Dense retrieval"
+    ],
+    "scoringFormula": "Cosine similarity",
+    "trainingData": "~1.13 billion query-document pairs from mC4, CC News, multilingual Wikipedia, Snowflake web search data. ~400M English, 7 European languages with retrieval-based consistency filtering",
+    "languages": "100+ languages including English, Spanish, French, German, Chinese, Japanese, Korean, Russian, Finnish",
+    "useCases": [
+      "Multilingual enterprise search",
+      "Cross-lingual semantic retrieval",
+      "Large-scale document collections",
+      "Budget-conscious GPU deployments",
+      "Long-context multilingual processing"
+    ],
+    "specialFeatures": [
+      "Multilingual without English compromise",
+      "Matryoshka at 256d (98% retention)",
+      "INT4/INT8 scalar quantization",
+      "8192-token context window",
+      "Retrieval-based consistency filtering",
+      "FAISS-compatible with pq256x4fs"
+    ],
+    "bestFor": "Organizations requiring multilingual retrieval with top English performance",
+    "queryPrompt": "query: {content}",
+    "optionalPrompts": null,
+    "requiredPrompts": {
+      "query": "query:"
+    },
+    "taskPrompts": {
+      "query": "query:"
+    },
+    "instructionFormat": "query: prefix required for queries, no prefix for documents",
+    "matryoshkaDimensions": [
+      1024,
+      256
+    ],
+    "matryoshkaPerformance": "1024d: 55.6 BEIR, 55.8 MIRACL | 256d: 54.3 BEIR (-2.3%), 54.3 MIRACL (-2.7%) - 98% retention",
+    "graniteEcosystem": null,
+    "improvementOverGTE": "Outperforms mE5 Large, BGE-M3, GTE Multilingual on combined benchmarks",
+    "ipIndemnity": null,
+    "apiPricing": "Snowflake pricing not disclosed, open-source model available",
+    "displayName": "Snowflake Arctic (568M)",
+    "tableName": "emb_essays_snowflake_arctic_embed2_568m",
+    "paramMillions": 568.0
+  },
+  {
+    "ollamaName": "bge-large:335m",
+    "dimensions": 1024,
+    "developer": "BAAI (Beijing Academy of Artificial Intelligence)",
+    "license": "MIT",
+    "countryOfOrigin": "China",
+    "releaseDate": "2023-09-12",
+    "parameters": "335M",
+    "contextLength": 512,
+    "architecture": "RoBERTa-based encoder with RetroMAE pretraining",
+    "description": "State-of-the-art English embedding model achieving #1 MTEB ranking at release with 64.23 average score. RoBERTa-based architecture with 1024-dimensional embeddings optimized for retrieval tasks. Outperforms OpenAI ada-002 despite smaller size. Version 1.5 improved similarity distribution for better performance.",
+    "mtebScore": 64.23,
+    "mtebEnglishScore": 64.23,
+    "mtebEnglishV2": null,
+    "mtebMultilingualScore": null,
+    "mtebCodeScore": null,
+    "cMtebScore": null,
+    "beirScore": 54.29,
+    "miraclScore": null,
+    "clefScore": null,
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": "50265 (RoBERTa)",
+    "hiddenSize": 1024,
+    "intermediateSize": 4096,
+    "modelSize": "1.34GB (model.safetensors), 4.02GB total",
+    "memoryFootprint": "~1.06GB for float16/bfloat16",
+    "memoryEfficiency": "Efficient with bfloat16 for 50% memory reduction",
+    "inferenceSpeed": "Efficient on CPU and GPU with fp16 acceleration",
+    "sparseDimensions": null,
+    "quantization": "FP32, FP16, BF16, ONNX",
+    "quantizationStrategy": "Standard PyTorch/ONNX quantization",
+    "binaryQuantization": "Supported via standard quantization frameworks",
+    "sizeComparison": {
+      "FP32": "~2.68GB",
+      "FP16": "~1.34GB",
+      "BF16": "~1.34GB"
+    },
+    "accuracyVsFp16": "Minimal degradation with FP16/BF16",
+    "compressionRatio": "~2x (FP16 vs FP32)",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "Strong accuracy with efficient inference on fp16",
+    "performanceBreakdown": {
+      "MTEB_Average": 64.23,
+      "BEIR_NDCG@10": 54.29,
+      "Classification": 92.42,
+      "Clustering": "Strong",
+      "PairClassification": "Strong",
+      "Reranking": "Strong",
+      "STS": "Strong",
+      "Summarization": "Strong"
+    },
+    "performanceByTask": {
+      "MTEB_Average": 64.23,
+      "BEIR_NDCG@10": 54.29,
+      "Classification_AmazonPolarity": 92.42
+    },
+    "performanceHighlights": "#1 on MTEB at Aug 2023 release, 54.29 BEIR NDCG@10, outperforms OpenAI ada-002",
+    "languagePerformance": "English-only, optimized for English tasks",
+    "retrievalPerformance": "54.29 BEIR NDCG@10, state-of-the-art English retrieval",
+    "retrievalModes": [
+      "Dense retrieval"
+    ],
+    "scoringFormula": "Cosine similarity with CLS token pooling",
+    "trainingData": "RetroMAE pretraining on large-scale text, fine-tuned on 230M text pairs from Wikipedia, CC-Net, diverse sources with contrastive learning",
+    "languages": [
+      "English"
+    ],
+    "useCases": [
+      "English text retrieval",
+      "Semantic search applications",
+      "RAG pipelines",
+      "Short-query to long-passage retrieval",
+      "Document similarity"
+    ],
+    "specialFeatures": [
+      "#1 MTEB at release (Aug 2023)",
+      "RetroMAE pretraining method",
+      "Improved similarity distribution (v1.5)",
+      "CLS token pooling with normalization",
+      "Contrastive learning with hard negatives",
+      "Cross-device negative sharing"
+    ],
+    "bestFor": "English text retrieval and semantic search with proven performance",
+    "queryPrompt": "Represent this sentence for searching relevant passages: {query}",
+    "optionalPrompts": {
+      "v1.5": "Instructions optional with slight degradation"
+    },
+    "requiredPrompts": {
+      "query_v1.0": "Represent this sentence for searching relevant passages:"
+    },
+    "taskPrompts": {
+      "s2p_retrieval": "Represent this sentence for searching relevant passages:"
+    },
+    "instructionFormat": "Optional query prefix in v1.5, required in v1.0, never for documents",
+    "matryoshkaDimensions": null,
+    "matryoshkaPerformance": null,
+    "graniteEcosystem": null,
+    "improvementOverGTE": null,
+    "ipIndemnity": null,
+    "apiPricing": "Free (open-source)",
+    "displayName": "Bge Large (335M)",
+    "tableName": "emb_essays_bge_large_335m",
+    "paramMillions": 335.0
+  },
+  {
+    "ollamaName": "qwen3-embedding:4b-q8_0",
+    "dimensions": 2560,
+    "developer": "Qwen Team, Alibaba Cloud / DAMO Academy",
+    "license": "Apache 2.0",
+    "countryOfOrigin": "China",
+    "releaseDate": "2025-06-05",
+    "parameters": "4B",
+    "contextLength": 40960,
+    "architecture": "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA",
+    "description": "State-of-the-art 4B embedding model with 74.60 MTEB English v2, 2560-dimensional embeddings, and 32,768-token context. Decoder-only architecture with dual-encoder design and LoRA fine-tuning. Q8_0 quantization provides 50% memory reduction with <1% performance loss. Supports 119+ languages with instruction-aware capabilities.",
+    "mtebScore": 69.45,
+    "mtebEnglishScore": null,
+    "mtebEnglishV2": {
+      "TaskMean": 74.6,
+      "TypeMean": 68.1
+    },
+    "mtebMultilingualScore": {
+      "TaskMean": 69.45,
+      "TypeMean": 60.86
+    },
+    "mtebCodeScore": 80.06,
+    "cMtebScore": {
+      "TaskMean": 72.27,
+      "TypeMean": 73.51
+    },
+    "beirScore": null,
+    "miraclScore": null,
+    "clefScore": null,
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": 151936,
+    "hiddenSize": "3072-4096 (estimated)",
+    "intermediateSize": "16384-18432 (estimated)",
+    "modelSize": "~4-4.5GB (Q8_0)",
+    "memoryFootprint": "~4.5GB RAM/VRAM minimum, recommended 8GB+",
+    "memoryEfficiency": "Efficient with Q8_0 quantization, suitable for CPU deployment",
+    "inferenceSpeed": "Optimized for long-context processing",
+    "sparseDimensions": null,
+    "quantization": "Q8_0 (8-bit linear)",
+    "quantizationStrategy": "8-bit integer quantization with per-tensor/per-channel scaling",
+    "binaryQuantization": "Supported via GGUF quantization",
+    "sizeComparison": {
+      "Q8_0": "~4-4.5GB",
+      "FP16": "~8-9GB"
+    },
+    "accuracyVsFp16": "<1% degradation on most tasks",
+    "compressionRatio": "~2:1 (Q8_0 vs FP16)",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "Optimal balance - faster than FP16 with minimal accuracy loss",
+    "performanceBreakdown": {
+      "MTEB_Eng_v2_Task": 74.6,
+      "MTEB_Eng_v2_Type": 68.1,
+      "Classification": 89.84,
+      "STS": 88.72,
+      "PairClassification": 87.01,
+      "Retrieval": 68.46,
+      "Clustering": 57.51,
+      "Reranking": 50.76,
+      "BitextMining": 79.36,
+      "Code": 80.06
+    },
+    "performanceByTask": {
+      "MTEB_Eng_v2_Task": 74.6,
+      "MMTEB_Multilingual": 69.45,
+      "C_MTEB_Chinese": 72.27,
+      "MTEB_Code": 80.06,
+      "Classification": 89.84,
+      "STS": 88.72,
+      "Retrieval": 68.46
+    },
+    "performanceHighlights": "74.60 MTEB Eng v2 (among highest for 4B), 80.06 Code, 69.45 Multilingual, #2 on MMTEB among open models",
+    "languagePerformance": "Exceptional across 119+ languages, strong on code",
+    "retrievalPerformance": "68.46 retrieval score with 32K context support",
+    "retrievalModes": [
+      "Dense retrieval",
+      "Instruction-aware"
+    ],
+    "scoringFormula": "Cosine similarity with last token pooling",
+    "trainingData": "~150M synthetic pairs via Qwen3-32B (stage 1), ~12M high-quality filtered supervised pairs (stage 2), model merging with SLERP (stage 3)",
+    "languages": "119+ languages across 9 language families plus programming languages",
+    "useCases": [
+      "Production multilingual retrieval",
+      "Long-document processing (32K tokens)",
+      "Code search and documentation",
+      "High-accuracy semantic search",
+      "Cross-lingual information retrieval"
+    ],
+    "specialFeatures": [
+      "32,768-token context (longest)",
+      "2560-dimensional embeddings",
+      "Instruction-aware architecture",
+      "Matryoshka 32-2560 dimensions",
+      "Dual-encoder with LoRA",
+      "Grouped Query Attention (GQA)",
+      "Last token pooling from [EOS]"
+    ],
+    "bestFor": "High-accuracy multilingual retrieval with extended context",
+    "queryPrompt": "Instruct: {task_description}\nQuery: {query}",
+    "optionalPrompts": {
+      "instructions": "Optional with 1-5% performance boost"
+    },
+    "requiredPrompts": null,
+    "taskPrompts": {
+      "retrieval": "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: {query}",
+      "qa": "Instruct: Given a question, retrieve documents that answer the question\nQuery: {query}"
+    },
+    "instructionFormat": "Instruct: {task_description}\nQuery: {query} - applied to queries only",
+    "matryoshkaDimensions": "Custom dimensions from 32 to 2560",
+    "matryoshkaPerformance": "Custom dimensions 32-2560, flexible performance-efficiency tradeoff",
+    "graniteEcosystem": null,
+    "improvementOverGTE": null,
+    "ipIndemnity": null,
+    "apiPricing": "Alibaba Cloud pricing not disclosed, open-source model available",
+    "displayName": "Qwen3 (4B)",
+    "tableName": "emb_essays_qwen3_embedding_4b_q8_0",
+    "paramMillions": 4000.0
+  },
+  {
+    "ollamaName": "qwen3-embedding:0.6b-fp16",
+    "dimensions": 1024,
+    "developer": "Qwen Team, Alibaba Cloud / DAMO Academy",
+    "license": "Apache 2.0",
+    "countryOfOrigin": "China",
+    "releaseDate": "2025-06-05",
+    "parameters": "600M",
+    "contextLength": 32768,
+    "architecture": "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA",
+    "description": "Exceptional performance-to-size ratio with 70.70 MTEB English v2 at 600M parameters. Compact 1024-dimensional embeddings with 32,768-token context. Outperforms multilingual-e5-large-instruct by 7+ points and ranks 2nd among 0.6B models on MMTEB. Full precision baseline for optimal accuracy.",
+    "mtebScore": 64.33,
+    "mtebEnglishScore": null,
+    "mtebEnglishV2": {
+      "TaskMean": 70.7,
+      "TypeMean": "Not disclosed"
+    },
+    "mtebMultilingualScore": {
+      "TaskMean": 64.33,
+      "TypeMean": "Not disclosed"
+    },
+    "mtebCodeScore": 75.41,
+    "cMtebScore": {
+      "TaskMean": 66.33,
+      "TypeMean": "Not disclosed"
+    },
+    "beirScore": null,
+    "miraclScore": null,
+    "clefScore": null,
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": 151669,
+    "hiddenSize": "1536-2048 (estimated)",
+    "intermediateSize": "8192-11008 (estimated)",
+    "modelSize": "~1.2GB (FP16)",
+    "memoryFootprint": "~1.5GB RAM minimum, optimal with 4GB+",
+    "memoryEfficiency": "Highly efficient for consumer hardware and edge devices",
+    "inferenceSpeed": "~100-200 tokens/sec on CPU (hardware-dependent), faster on GPU",
+    "sparseDimensions": null,
+    "quantization": "FP16",
+    "quantizationStrategy": "Full precision 16-bit floating point",
+    "binaryQuantization": "Supported via GGUF quantization",
+    "sizeComparison": {
+      "FP16": "~1.2GB",
+      "FP32": "~2.4GB"
+    },
+    "accuracyVsFp16": "100% baseline",
+    "compressionRatio": "~1:1 (baseline)",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "Standard FP16 inference, optimized for quality",
+    "performanceBreakdown": {
+      "MTEB_Eng_v2_Task": 70.7,
+      "Classification": 85.76,
+      "STS": 86.57,
+      "PairClassification": 84.37,
+      "Retrieval": 61.83,
+      "Clustering": 54.05,
+      "Reranking": 48.18,
+      "BitextMining": 72.22,
+      "Code": 75.41
+    },
+    "performanceByTask": {
+      "MTEB_Eng_v2_Task": 70.7,
+      "MMTEB_Multilingual": 64.33,
+      "C_MTEB_Chinese": 66.33,
+      "MTEB_Code": 75.41,
+      "Classification": 85.76,
+      "STS": 86.57,
+      "Retrieval": 61.83
+    },
+    "performanceHighlights": "70.70 MTEB competitive with models 10x larger, outperforms e5-large by 7+ points, #2 among 0.6B models",
+    "languagePerformance": "Robust across 119+ languages with strong cross-lingual capabilities",
+    "retrievalPerformance": "61.83 retrieval score with 32K context support",
+    "retrievalModes": [
+      "Dense retrieval",
+      "Instruction-aware"
+    ],
+    "scoringFormula": "Cosine similarity with last token pooling",
+    "trainingData": "~150M synthetic pairs via Qwen3-32B (stage 1), ~12M high-quality filtered supervised pairs (stage 2), model merging with SLERP (stage 3)",
+    "languages": "119+ languages across 9 language families plus programming languages",
+    "useCases": [
+      "Resource-constrained semantic search",
+      "Edge and mobile deployment",
+      "Real-time retrieval applications",
+      "Multi-language document similarity",
+      "Lightweight RAG systems",
+      "Code search and analysis"
+    ],
+    "specialFeatures": [
+      "Exceptional 70.70 MTEB at 600M",
+      "32,768-token context",
+      "Matryoshka 32-1024 dimensions",
+      "Instruction-aware architecture",
+      "Dual-encoder with LoRA",
+      "Grouped Query Attention",
+      "Outperforms models 10x larger"
+    ],
+    "bestFor": "Balanced performance and efficiency for multilingual applications",
+    "queryPrompt": "Instruct: {task_description}\nQuery: {query}",
+    "optionalPrompts": {
+      "instructions": "Optional with 1-5% performance boost"
+    },
+    "requiredPrompts": null,
+    "taskPrompts": {
+      "retrieval": "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: {query}",
+      "qa": "Instruct: Given a question, retrieve documents that answer the question\nQuery: {query}"
+    },
+    "instructionFormat": "Instruct: {task_description}\nQuery: {query} - applied to queries only",
+    "matryoshkaDimensions": "Custom dimensions from 32 to 1024",
+    "matryoshkaPerformance": "Flexible 32-1024 dimensions with graceful degradation",
+    "graniteEcosystem": null,
+    "improvementOverGTE": "Outperforms multilingual-e5-large-instruct by 7+ MTEB points",
+    "ipIndemnity": null,
+    "apiPricing": "Alibaba Cloud pricing not disclosed, open-source model available",
+    "displayName": "Qwen3 (6B FP16)",
+    "tableName": "emb_essays_qwen3_embedding_0.6b_fp16",
+    "paramMillions": 600.0
+  },
+  {
+    "ollamaName": "qwen3-embedding:0.6b-q8_0",
+    "dimensions": 1024,
+    "developer": "Qwen Team, Alibaba Cloud / DAMO Academy",
+    "license": "Apache 2.0",
+    "countryOfOrigin": "China",
+    "releaseDate": "2025-06-05",
+    "parameters": "600M",
+    "contextLength": 32768,
+    "architecture": "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA",
+    "description": "Ultra-efficient Q8_0 quantized variant delivering 99%+ quality retention with 50% memory reduction. Achieves ~70.4 MTEB English v2 at only 639MB model size. Optimal for production CPU deployments with 20-30% faster inference than FP16. Best overall balance for resource-constrained multilingual applications.",
+    "mtebScore": 64.0,
+    "mtebEnglishScore": null,
+    "mtebEnglishV2": {
+      "TaskMean": 70.4,
+      "TypeMean": "Not disclosed"
+    },
+    "mtebMultilingualScore": {
+      "TaskMean": 64.0,
+      "TypeMean": "Not disclosed"
+    },
+    "mtebCodeScore": 75.1,
+    "cMtebScore": {
+      "TaskMean": 66.0,
+      "TypeMean": "Not disclosed"
+    },
+    "beirScore": null,
+    "miraclScore": null,
+    "clefScore": null,
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": 151669,
+    "hiddenSize": "1536-2048 (estimated)",
+    "intermediateSize": "8192-11008 (estimated)",
+    "modelSize": "~639MB (Q8_0)",
+    "memoryFootprint": "~800MB-1GB RAM minimum, optimal with 2-3GB",
+    "memoryEfficiency": "Highly efficient, enables 4GB RAM device deployment",
+    "inferenceSpeed": "~120-250 tokens/sec on CPU (20-30% faster than FP16)",
+    "sparseDimensions": null,
+    "quantization": "Q8_0 (8-bit linear)",
+    "quantizationStrategy": "8-bit integer quantization with per-tensor/per-channel scaling",
+    "binaryQuantization": "Q8_0 GGUF quantization",
+    "sizeComparison": {
+      "Q8_0": "~639MB",
+      "FP16": "~1.2GB",
+      "FP32": "~2.4GB"
+    },
+    "accuracyVsFp16": "99%+ retention (only 0.3 MTEB point loss)",
+    "compressionRatio": "~2:1 vs FP16, ~3.7:1 vs FP32",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "20-30% faster CPU inference with 99%+ quality - optimal balance",
+    "performanceBreakdown": {
+      "MTEB_Eng_v2_Task": 70.4,
+      "Classification": 85.5,
+      "STS": 86.3,
+      "PairClassification": 84.1,
+      "Retrieval": 61.5,
+      "Clustering": 53.8,
+      "Reranking": 48.0,
+      "Code": 75.1
+    },
+    "performanceByTask": {
+      "MTEB_Eng_v2_Task": 70.4,
+      "MMTEB_Multilingual": 64.0,
+      "C_MTEB_Chinese": 66.0,
+      "MTEB_Code": 75.1,
+      "Classification": 85.5,
+      "STS": 86.3,
+      "Retrieval": 61.5
+    },
+    "performanceHighlights": "70.4 MTEB (0.3 point loss vs FP16), 99%+ quality retention, 20-30% faster inference",
+    "languagePerformance": "Maintains robust 119+ language support with minimal degradation",
+    "retrievalPerformance": "61.5 retrieval score, <0.5 point loss vs FP16",
+    "retrievalModes": [
+      "Dense retrieval",
+      "Instruction-aware"
+    ],
+    "scoringFormula": "Cosine similarity with last token pooling",
+    "trainingData": "~150M synthetic pairs via Qwen3-32B (stage 1), ~12M high-quality filtered supervised pairs (stage 2), model merging with SLERP (stage 3)",
+    "languages": "119+ languages across 9 language families plus programming languages",
+    "useCases": [
+      "CPU-only production deployments",
+      "Mobile and edge device inference",
+      "Large-scale batch processing",
+      "Memory-constrained environments",
+      "High-throughput API services",
+      "Local/on-device search",
+      "Offline embedding generation",
+      "Cost-optimized cloud deployments"
+    ],
+    "specialFeatures": [
+      "99%+ quality retention with Q8",
+      "50% memory reduction vs FP16",
+      "20-30% faster CPU inference",
+      "639MB model size",
+      "32,768-token context",
+      "Matryoshka 32-1024 dimensions",
+      "llama.cpp compatible"
+    ],
+    "bestFor": "Production CPU deployment with optimal speed-accuracy balance",
+    "queryPrompt": "Instruct: {task_description}\nQuery: {query}",
+    "optionalPrompts": {
+      "instructions": "Optional with 1-5% performance boost"
+    },
+    "requiredPrompts": null,
+    "taskPrompts": {
+      "retrieval": "Instruct: Given a web search query, retrieve relevant passages that answer the query\nQuery: {query}",
+      "qa": "Instruct: Given a question, retrieve documents that answer the question\nQuery: {query}"
+    },
+    "instructionFormat": "Instruct: {task_description}\nQuery: {query} - applied to queries only",
+    "matryoshkaDimensions": "Custom dimensions from 32 to 1024",
+    "matryoshkaPerformance": "Flexible 32-1024 dimensions maintained in quantized variant",
+    "graniteEcosystem": null,
+    "improvementOverGTE": "Significantly outperforms e5-large-instruct at smaller size",
+    "ipIndemnity": null,
+    "apiPricing": "Alibaba Cloud pricing not disclosed, open-source model available",
+    "displayName": "Qwen3 (6B)",
+    "tableName": "emb_essays_qwen3_embedding_0.6b_q8_0",
+    "paramMillions": 600.0
+  },
+  {
+    "ollamaName": "bge-m3:567m",
+    "dimensions": 1024,
+    "developer": "BAAI (Beijing Academy of Artificial Intelligence)",
+    "license": "MIT",
+    "countryOfOrigin": "China",
+    "releaseDate": "2024-01-30",
+    "parameters": "567M",
+    "contextLength": 8192,
+    "architecture": "XLM-RoBERTa-based with RetroMAE, extended to 8192 tokens",
+    "description": "First embedding model supporting three simultaneous retrieval modes: dense (1024-dim), sparse (250K-dim vocabulary), and multi-vector (per-token). XLM-RoBERTa-based with 8192-token context supporting 100+ languages. Achieves 70.0 MIRACL multilingual and 75.5% MKQA cross-lingual QA. No query instructions required.",
+    "mtebScore": 59.56,
+    "mtebEnglishScore": 59.56,
+    "mtebEnglishV2": null,
+    "mtebMultilingualScore": null,
+    "mtebCodeScore": 80.76,
+    "cMtebScore": null,
+    "beirScore": 48.8,
+    "miraclScore": 70.0,
+    "clefScore": null,
+    "locoScore": null,
+    "mkqaRecall": 75.5,
+    "vocabularySize": 250002,
+    "hiddenSize": 1024,
+    "intermediateSize": 4096,
+    "modelSize": "2.27GB (model.safetensors), GGUF F16 (1.14-1.16GB), GGUF Q8_0 (616-635MB)",
+    "memoryFootprint": "~1.06GB for float16/bfloat16, ~4.5GB peak vRAM during training",
+    "memoryEfficiency": "Efficient with fp16 optimization and GGUF quantization",
+    "inferenceSpeed": "Optimized batching for long texts, supports multi-GPU",
+    "sparseDimensions": 250002,
+    "quantization": "FP32, FP16, BF16, GGUF (F16, Q8_0)",
+    "quantizationStrategy": "GGUF quantization with mixed precision options",
+    "binaryQuantization": "Supported via GGUF quantization",
+    "sizeComparison": {
+      "Full": "2.27GB",
+      "GGUF_F16": "1.14-1.16GB",
+      "GGUF_Q8_0": "616-635MB"
+    },
+    "accuracyVsFp16": "Minimal degradation with GGUF quantization",
+    "compressionRatio": "~2x (F16 vs Full), ~3.6x (Q8_0 vs Full)",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "Versatile with three retrieval modes, optimized for accuracy",
+    "performanceBreakdown": {
+      "MIRACL_Multilingual_Hybrid": 70.0,
+      "MIRACL_Dense_Only": "65.4-68",
+      "MKQA_CrossLingual_QA": 75.5,
+      "BEIR_Dense": 48.8
+    },
+    "performanceByTask": {
+      "MIRACL_Multilingual": 70.0,
+      "MKQA_Recall@100": 75.5,
+      "BEIR": 48.8
+    },
+    "performanceHighlights": "70.0 MIRACL hybrid mode, 75.5% MKQA cross-lingual, strong on MLDR long documents",
+    "languagePerformance": "Consistent strong performance across 100+ languages",
+    "retrievalPerformance": "Three-mode hybrid scoring: dense + sparse + multi-vector",
+    "retrievalModes": [
+      "Dense retrieval (1024-dim)",
+      "Sparse retrieval (250K-dim)",
+      "Multi-vector retrieval (per-token)",
+      "Hybrid combination"
+    ],
+    "scoringFormula": "s_rank = w1*s_dense + w2*s_lex + w3*s_mul (configurable weights)",
+    "trainingData": "XLM-RoBERTa extended via RetroMAE, fine-tuned on multilingual text pairs with self-knowledge distillation, includes MLDR dataset (13-language long document retrieval)",
+    "languages": "100+ languages spanning diverse language families",
+    "useCases": [
+      "Multilingual search systems",
+      "Cross-lingual retrieval",
+      "Hybrid retrieval pipelines",
+      "Long document processing (8K tokens)",
+      "Versatile semantic search",
+      "Multi-mode ranking systems"
+    ],
+    "specialFeatures": [
+      "Three retrieval modes simultaneously",
+      "Dense + sparse + multi-vector",
+      "8192-token context via RetroMAE",
+      "No query instructions required",
+      "Self-knowledge distillation",
+      "MCLS for long text enhancement",
+      "ColBERT-style late interaction"
+    ],
+    "bestFor": "Multilingual hybrid retrieval requiring multiple ranking signals",
+    "queryPrompt": null,
+    "optionalPrompts": null,
+    "requiredPrompts": null,
+    "taskPrompts": null,
+    "instructionFormat": "No instructions required - major improvement over v1.5",
+    "matryoshkaDimensions": null,
+    "matryoshkaPerformance": null,
+    "graniteEcosystem": null,
+    "improvementOverGTE": null,
+    "ipIndemnity": null,
+    "apiPricing": "Free (open-source)",
+    "displayName": "Bge M3 (567M)",
+    "tableName": "emb_essays_bge_m3_567m",
+    "paramMillions": 567.0
+  },
+  {
+    "ollamaName": "embeddinggemma:300m-qat-q4_0",
+    "dimensions": 768,
+    "developer": "Google DeepMind",
+    "license": "Gemma License (ai.google.dev/gemma/terms)",
+    "countryOfOrigin": "USA",
+    "releaseDate": "2025-09-04",
+    "parameters": "300M",
+    "contextLength": 2048,
+    "architecture": "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization",
+    "description": "Edge-optimized 4-bit quantized variant with QAT achieving 99.13% quality retention at 278MB. Smallest EmbeddingGemma variant optimized for mobile and IoT devices with <200MB RAM. Maintains 67.91 MTEB English score with aggressive compression. Fastest inference variant at <15ms on EdgeTPU.",
+    "mtebScore": 60.62,
+    "mtebEnglishScore": 67.91,
+    "mtebEnglishV2": null,
+    "mtebMultilingualScore": {
+      "TaskMean": 60.62
+    },
+    "mtebCodeScore": 67.99,
+    "cMtebScore": null,
+    "beirScore": null,
+    "miraclScore": null,
+    "clefScore": null,
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": 262208,
+    "hiddenSize": 768,
+    "intermediateSize": 3072,
+    "modelSize": "278MB (Q4)",
+    "memoryFootprint": "<200MB RAM with quantization",
+    "memoryEfficiency": "Optimized for mobile phones with limited resources",
+    "inferenceSpeed": "<15ms on EdgeTPU for 256 tokens - fastest variant",
+    "sparseDimensions": null,
+    "quantization": "Q4_0 with Quantization-Aware Training",
+    "quantizationStrategy": "QAT during final ~5K training steps, 4-bit per-block quantization",
+    "binaryQuantization": "Q4_0 with QAT",
+    "sizeComparison": {
+      "Q4": "278MB",
+      "Q8": "329MB",
+      "BF16": "612MB"
+    },
+    "accuracyVsFp16": "99.13% quality retention (0.87% degradation)",
+    "compressionRatio": "2.2x vs BF16, 4.4x vs FP32, 1.18x vs Q8",
+    "qatAdvantage": "QAT enables <1% loss vs 2-5% with post-training Q4 quantization",
+    "speedVsAccuracy": "<15ms inference, fastest with acceptable 0.87% quality loss",
+    "performanceBreakdown": {
+      "MTEB_English": 67.91,
+      "MTEB_Multilingual": 60.62,
+      "MTEB_Code": 67.99,
+      "Classification": "89.3 (+8.0 vs comparables)"
+    },
+    "performanceByTask": {
+      "MTEB_English": 67.91,
+      "MTEB_Multilingual": 60.62,
+      "MTEB_Code": 67.99,
+      "Classification": 89.3
+    },
+    "performanceHighlights": "99.13% quality at 278MB, 0.87% degradation vs BF16, fastest inference, mobile-optimized",
+    "languagePerformance": "Strong across 100+ languages with minimal Q4 degradation",
+    "retrievalPerformance": "Competitive retrieval with extreme compression",
+    "retrievalModes": [
+      "Dense retrieval"
+    ],
+    "scoringFormula": "Cosine similarity",
+    "trainingData": "~320 billion tokens from 100+ languages, knowledge distillation from Gemini Embedding, NCE loss with hard negatives, GOR regularization",
+    "languages": "100+ languages spanning web documents, code, and synthetic data",
+    "useCases": [
+      "Mobile and edge devices",
+      "On-device RAG applications",
+      "Local search with privacy",
+      "Offline embedding generation",
+      "IoT and embedded systems",
+      "Memory-critical deployments"
+    ],
+    "specialFeatures": [
+      "QAT 4-bit quantization",
+      "278MB model size",
+      "<200MB RAM footprint",
+      "99.13% quality retention",
+      "<15ms EdgeTPU inference",
+      "Matryoshka [768, 512, 256, 128]",
+      "Runs on mobile phones"
+    ],
+    "bestFor": "Mobile/edge deployment where <300MB threshold critical",
+    "queryPrompt": "task: search result | query: {content}",
+    "optionalPrompts": null,
+    "requiredPrompts": {
+      "retrieval": "task: search result | query:",
+      "qa": "task: question answer | query:",
+      "fact_check": "task: fact check | query:",
+      "classification": "task: classification | query:",
+      "clustering": "task: clustering | query:",
+      "semantic_similarity": "task: semantic similarity | query:",
+      "code_retrieval": "task: code retrieval | query:"
+    },
+    "taskPrompts": {
+      "retrieval": "task: search result | query:",
+      "qa": "task: question answer | query:",
+      "fact_check": "task: fact check | query:",
+      "classification": "task: classification | query:",
+      "clustering": "task: clustering | query:",
+      "semantic_similarity": "task: semantic similarity | query:",
+      "code_retrieval": "task: code retrieval | query:",
+      "document": "title: {title | 'none'} | text: {content}"
+    },
+    "instructionFormat": "task: {task_type} | query: {content} with task-specific variants",
+    "matryoshkaDimensions": [
+      768,
+      512,
+      256,
+      128
+    ],
+    "matryoshkaPerformance": "768d: 67.91 | 512d: 67.36 | 256d: 66.44 | 128d: 64.64",
+    "graniteEcosystem": null,
+    "improvementOverGTE": null,
+    "ipIndemnity": null,
+    "apiPricing": "Free (open-source)",
+    "displayName": "Embeddinggemma 300M Qat Q4 (300M Q4)",
+    "tableName": "emb_essays_embeddinggemma_300m_qat_q4",
+    "paramMillions": 300.0
+  },
+  {
+    "ollamaName": "embeddinggemma:300m-qat-q8_0",
+    "dimensions": 768,
+    "developer": "Google DeepMind",
+    "license": "Gemma License (ai.google.dev/gemma/terms)",
+    "countryOfOrigin": "USA",
+    "releaseDate": "2025-09-04",
+    "parameters": "300M",
+    "contextLength": 2048,
+    "architecture": "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization",
+    "description": "Production-recommended 8-bit quantized variant with QAT achieving 99.64% quality retention. Delivers 68.13 MTEB English at 329MB with 1.86x memory savings. Best overall balance for production deployments. Google's recommended 'sweet spot' configuration balancing accuracy and efficiency.",
+    "mtebScore": 60.93,
+    "mtebEnglishScore": 68.13,
+    "mtebEnglishV2": null,
+    "mtebMultilingualScore": {
+      "TaskMean": 60.93
+    },
+    "mtebCodeScore": 68.7,
+    "cMtebScore": null,
+    "beirScore": null,
+    "miraclScore": null,
+    "clefScore": null,
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": 262208,
+    "hiddenSize": 768,
+    "intermediateSize": 3072,
+    "modelSize": "329MB (Q8)",
+    "memoryFootprint": "<250MB RAM with quantization",
+    "memoryEfficiency": "Excellent balance of memory and quality for production",
+    "inferenceSpeed": "<18ms on EdgeTPU - moderate slowdown vs Q4 but still fast",
+    "sparseDimensions": null,
+    "quantization": "Q8_0 with Quantization-Aware Training",
+    "quantizationStrategy": "QAT during final ~5K training steps, 8-bit per-block with per-tensor/per-channel scaling",
+    "binaryQuantization": "Q8_0 with QAT",
+    "sizeComparison": {
+      "Q8": "329MB",
+      "Q4": "278MB",
+      "BF16": "612MB"
+    },
+    "accuracyVsFp16": "99.64% quality retention (only 0.36% degradation)",
+    "compressionRatio": "1.86x vs BF16, 3.7x vs FP32",
+    "qatAdvantage": "QAT enables 0.36% loss vs 1-3% with post-training Q8 quantization",
+    "speedVsAccuracy": "<18ms inference, optimal balance for production - recommended default",
+    "performanceBreakdown": {
+      "MTEB_English": 68.13,
+      "MTEB_Multilingual": 60.93,
+      "MTEB_Code": 68.7,
+      "Classification": "89.6 (+8.3 vs comparables)"
+    },
+    "performanceByTask": {
+      "MTEB_English": 68.13,
+      "MTEB_Multilingual": 60.93,
+      "MTEB_Code": 68.7,
+      "Classification": 89.6
+    },
+    "performanceHighlights": "99.64% quality at 329MB, only 0.36% degradation vs BF16, Google-recommended configuration",
+    "languagePerformance": "Near-identical to BF16 across 100+ languages",
+    "retrievalPerformance": "Maintains BF16-level retrieval with 1.86x compression",
+    "retrievalModes": [
+      "Dense retrieval"
+    ],
+    "scoringFormula": "Cosine similarity",
+    "trainingData": "~320 billion tokens from 100+ languages, knowledge distillation from Gemini Embedding, NCE loss with hard negatives, GOR regularization",
+    "languages": "100+ languages spanning web documents, code, and synthetic data",
+    "useCases": [
+      "Production deployments",
+      "Cloud API services",
+      "Batch processing pipelines",
+      "High-accuracy edge applications",
+      "Server-side embeddings",
+      "Enterprise search systems"
+    ],
+    "specialFeatures": [
+      "QAT 8-bit quantization",
+      "99.64% quality retention",
+      "329MB model size",
+      "<250MB RAM footprint",
+      "Production-recommended",
+      "Google's 'sweet spot' config",
+      "Matryoshka [768, 512, 256, 128]"
+    ],
+    "bestFor": "Production deployments requiring high accuracy with moderate memory constraints",
+    "queryPrompt": "task: search result | query: {content}",
+    "optionalPrompts": null,
+    "requiredPrompts": {
+      "retrieval": "task: search result | query:",
+      "qa": "task: question answer | query:",
+      "fact_check": "task: fact check | query:",
+      "classification": "task: classification | query:",
+      "clustering": "task: clustering | query:",
+      "semantic_similarity": "task: semantic similarity | query:",
+      "code_retrieval": "task: code retrieval | query:"
+    },
+    "taskPrompts": {
+      "retrieval": "task: search result | query:",
+      "qa": "task: question answer | query:",
+      "fact_check": "task: fact check | query:",
+      "classification": "task: classification | query:",
+      "clustering": "task: clustering | query:",
+      "semantic_similarity": "task: semantic similarity | query:",
+      "code_retrieval": "task: code retrieval | query:",
+      "document": "title: {title | 'none'} | text: {content}"
+    },
+    "instructionFormat": "task: {task_type} | query: {content} with task-specific variants",
+    "matryoshkaDimensions": [
+      768,
+      512,
+      256,
+      128
+    ],
+    "matryoshkaPerformance": "768d: 68.13 | 512d: 67.57 | 256d: 66.65 | 128d: 64.85",
+    "graniteEcosystem": null,
+    "improvementOverGTE": null,
+    "ipIndemnity": null,
+    "apiPricing": "Free (open-source)",
+    "displayName": "Embeddinggemma 300M Qat Q8 (300M)",
+    "tableName": "emb_essays_embeddinggemma_300m_qat_q8",
+    "paramMillions": 300.0
+  },
+  {
+    "ollamaName": "embeddinggemma:300m-bf16",
+    "dimensions": 768,
+    "developer": "Google DeepMind",
+    "license": "Gemma License (ai.google.dev/gemma/terms)",
+    "countryOfOrigin": "USA",
+    "releaseDate": "2025-09-04",
+    "parameters": "300M",
+    "contextLength": 2048,
+    "architecture": "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization",
+    "description": "#1 MTEB for models under 500M parameters with 68.36 English score. Full-precision baseline model with 300M parameters producing 768-dimensional embeddings. Trained on 320B tokens from 100+ languages via knowledge distillation from Gemini. Optimized for server-side deployment and research applications.",
+    "mtebScore": 61.15,
+    "mtebEnglishScore": 68.36,
+    "mtebEnglishV2": null,
+    "mtebMultilingualScore": {
+      "TaskMean": 61.15
+    },
+    "mtebCodeScore": 68.76,
+    "cMtebScore": null,
+    "beirScore": null,
+    "miraclScore": null,
+    "clefScore": null,
+    "locoScore": null,
+    "mkqaRecall": "N/A - typically not disclosed",
+    "vocabularySize": 262208,
+    "hiddenSize": 768,
+    "intermediateSize": 3072,
+    "modelSize": "612MB (BFloat16)",
+    "memoryFootprint": "~650MB RAM for inference",
+    "memoryEfficiency": "Suitable for laptops, desktops, servers with adequate memory",
+    "inferenceSpeed": "<20ms on EdgeTPU for 256 tokens",
+    "sparseDimensions": null,
+    "quantization": "BFloat16 (baseline)",
+    "quantizationStrategy": "Full precision BFloat16",
+    "binaryQuantization": "Not applicable (full precision)",
+    "sizeComparison": {
+      "BF16": "612MB",
+      "FP32": "~1.2GB"
+    },
+    "accuracyVsFp16": "100% baseline reference",
+    "compressionRatio": "~1:1 (baseline)",
+    "qatAdvantage": null,
+    "speedVsAccuracy": "Moderate speed, maximum accuracy for size class",
+    "performanceBreakdown": {
+      "MTEB_English": 68.36,
+      "MTEB_Multilingual": 61.15,
+      "MTEB_Code": 68.76,
+      "Classification": 89.84,
+      "Clustering": "+7.8 improvement",
+      "Retrieval": "Best-in-class for size",
+      "Summarization": "+4.4 improvement"
+    },
+    "performanceByTask": {
+      "MTEB_English": 68.36,
+      "MTEB_Multilingual": 61.15,
+      "MTEB_Code": 68.76,
+      "Classification": 89.84
+    },
+    "performanceHighlights": "#1 under 500M parameters, competitive with models 2x larger, +8.5 classification improvement",
+    "languagePerformance": "Excellent across 100+ languages from knowledge distillation",
+    "retrievalPerformance": "Best-in-class retrieval for <500M models",
+    "retrievalModes": [
+      "Dense retrieval"
+    ],
+    "scoringFormula": "Cosine similarity",
+    "trainingData": "~320 billion tokens from 100+ languages, knowledge distillation from Gemini Embedding, NCE loss with hard negatives, GOR regularization, TPUv5e training",
+    "languages": "100+ languages spanning web documents, code, and synthetic data",
+    "useCases": [
+      "Server-side deployments",
+      "Research applications",
+      "Fine-tuning base model",
+      "Benchmarking baseline",
+      "Maximum accuracy requirements",
+      "Academic research"
+    ],
+    "specialFeatures": [
+      "#1 MTEB under 500M parameters",
+      "68.36 MTEB English",
+      "Knowledge distillation from Gemini",
+      "100+ language support",
+      "Matryoshka [768, 512, 256, 128]",
+      "+8.5 classification improvement",
+      "24-layer architecture"
+    ],
+    "bestFor": "Server deployments prioritizing maximum accuracy and research baselines",
+    "queryPrompt": "task: search result | query: {content}",
+    "optionalPrompts": null,
+    "requiredPrompts": {
+      "retrieval": "task: search result | query:",
+      "qa": "task: question answer | query:",
+      "fact_check": "task: fact check | query:",
+      "classification": "task: classification | query:",
+      "clustering": "task: clustering | query:",
+      "semantic_similarity": "task: semantic similarity | query:",
+      "code_retrieval": "task: code retrieval | query:"
+    },
+    "taskPrompts": {
+      "retrieval": "task: search result | query:",
+      "qa": "task: question answer | query:",
+      "fact_check": "task: fact check | query:",
+      "classification": "task: classification | query:",
+      "clustering": "task: clustering | query:",
+      "semantic_similarity": "task: semantic similarity | query:",
+      "code_retrieval": "task: code retrieval | query:",
+      "document": "title: {title | 'none'} | text: {content}"
+    },
+    "instructionFormat": "task: {task_type} | query: {content} with task-specific variants",
+    "matryoshkaDimensions": [
+      768,
+      512,
+      256,
+      128
+    ],
+    "matryoshkaPerformance": "768d: 68.36 | 512d: 67.80 | 256d: 66.89 | 128d: 65.09",
+    "graniteEcosystem": null,
+    "improvementOverGTE": "Competitive with models nearly 2x larger",
+    "ipIndemnity": null,
+    "apiPricing": "Free (open-source)",
+    "displayName": "Embeddinggemma 300M Bf16 (300M)",
+    "tableName": "emb_essays_embeddinggemma_300m_bf16",
+    "paramMillions": 300.0
+  }
+];
+
+        console.log('Models loaded:', window.modelsData.length);
+        console.log('Sample model fields:', Object.keys(window.modelsData[0]).length);
+
+        // Initialize the model explorer UI
+        initModelExplorer(window.modelsData);
+
+    } catch(err) {
+        console.error('JavaScript error during initialization:', err);
+        console.error('Error stack:', err.stack);
+    }
+})();
+
+    </script>
+</body>
+</html>

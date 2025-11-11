@@ -1,0 +1,29 @@
+[project]
+name = "localrunner"
+version = "0.1.0"
+description = "Py Project Setup"
+requires-python = ">=3.11"
+readme = "README.md"
+dependencies = [
+    "beautifulsoup4>=4.14.2",
+    "datasets>=4.4.1",
+    "jinja2>=3.1.6",
+    "kaleido>=1.2.0",
+    "markdown>=3.10",
+    "numpy>=2.3.4",
+    "openai>=2.7.2",
+    "pgai>=0.12.1",
+    "pgvector>=0.4.1",
+    "plotly>=6.4.0",
+    "psycopg>=3.2.12",
+    "psycopg-pool>=3.2.7",
+    "psycopg2>=2.9.11",
+    "pydantic-ai>=1.13.0",
+    "python-dotenv>=1.2.1",
+    "pyyaml>=6.0.3",
+    "rich>=14.2.0",
+    "scipy>=1.16.3",
+    "seaborn>=0.13.2",
+    "streamlit>=1.51.0",
+    "structlog>=25.5.0",
+]

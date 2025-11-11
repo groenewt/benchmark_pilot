@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temporal Evolution Analysis - Interactive Animated Visualizations</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            min-height: calc(100vh - 40px);
+        }
+
+        /* Navigation Sidebar */
+        .nav-sidebar {
+            background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
+            color: white;
+            padding: 30px 20px;
+            position: sticky;
+            top: 0;
+            height: calc(100vh - 40px);
+            overflow-y: auto;
+            border-right: 3px solid rgba(245, 87, 108, 0.3);
+        }
+
+        .nav-logo {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #f5576c;
+            text-align: center;
+        }
+
+        .nav-subtitle {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 8px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+        }
+
+        .nav-link::before {
+            content: attr(data-icon);
+            margin-right: 10px;
+            font-size: 16px;
+        }
+
+        .nav-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 20px 0;
+        }
+
+        .progress-indicator {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 15px;
+        }
+
+        .progress-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .progress-item.viewed {
+            color: #48bb78;
+        }
+
+        .progress-item::before {
+            content: "○";
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .progress-item.viewed::before {
+            content: "✓";
+            color: #48bb78;
+        }
+
+        .keyboard-hint {
+            margin-top: 20px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+        }
+
+        .keyboard-hint kbd {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 10px;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            overflow-y: auto;
+            height: calc(100vh - 40px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px 40px;
+            border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            margin-bottom: 20px;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-2px);
+        }
+
+        .back-link::before {
+            content: "←";
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        h1::before {
+            content: "⏳ ";
+            font-size: 32px;
+            margin-right: 10px;
+        }
+
+        .description {
+            font-size: 16px;
+            line-height: 1.6;
+            opacity: 0.95;
+            max-width: 1000px;
+        }
+
+        /* Filter Panel */
+        .filter-panel {
+            padding: 25px 40px;
+            background: linear-gradient(135deg, #fff9fa 0%, #fff5f7 100%);
+            border-bottom: 2px solid #ffd6e7;
+        }
+
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .filter-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #c41e3a;
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-header h2::before {
+            content: "🎛️";
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        .reset-filters-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .reset-filters-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-label::before {
+            content: attr(data-icon);
+            margin-right: 6px;
+            font-size: 14px;
+        }
+
+        .filter-input {
+            padding: 10px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #f5576c;
+            box-shadow: 0 0 0 3px rgba(245, 87, 108, 0.1);
+        }
+
+        .year-range-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .filter-checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            max-height: 120px;
+            overflow-y: auto;
+            padding: 10px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+        }
+
+        .filter-checkbox-item {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .filter-checkbox-item input {
+            margin-right: 6px;
+        }
+
+        /* Multi-select dropdown styling */
+        select[multiple] {
+            background: white;
+            cursor: pointer;
+        }
+
+        select[multiple] option {
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 2px 0;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        select[multiple] option:hover {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        select[multiple] option:checked {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Insights Panel - Collapsible */
+        .insights-panel {
+            background: linear-gradient(135deg, #fff5f5 0%, #fff0f5 100%);
+            border-bottom: 1px solid #ffd6e7;
+        }
+
+        .insights-header {
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .insights-header:hover {
+            background: rgba(245, 87, 108, 0.05);
+        }
+
+        .insights-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #c41e3a;
+            display: flex;
+            align-items: center;
+            margin: 0;
+        }
+
+        .insights-header h2::before {
+            content: "🤖";
+            margin-right: 10px;
+            font-size: 24px;
+        }
+
+        .collapse-toggle {
+            font-size: 24px;
+            color: #c41e3a;
+            transition: transform 0.3s ease;
+        }
+
+        .collapse-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .insights-content {
+            max-height: 800px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            padding: 0 40px 30px 40px;
+            font-size: 15px;
+            line-height: 1.8;
+            color: #4a5568;
+        }
+
+        .insights-content.collapsed {
+            max-height: 0;
+            padding: 0 40px;
+        }
+
+        .insights-content h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .insights-content h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+
+        .insights-content p {
+            margin-bottom: 12px;
+        }
+
+        .insights-content ul {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        .insights-content li {
+            margin-bottom: 6px;
+        }
+
+        .insights-content strong {
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        /* Chart Grid */
+        .chart-grid {
+            padding: 40px;
+            background: #fafbfc;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+
+        .chart-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            scroll-margin-top: 100px;
+        }
+
+        .chart-header {
+            padding: 20px 30px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 2px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .chart-header-text {
+            flex: 1;
+        }
+
+        .chart-header h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 6px;
+        }
+
+        .chart-header p {
+            font-size: 14px;
+            color: #718096;
+            line-height: 1.5;
+        }
+
+        .chart-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 20px;
+        }
+
+        .chart-action-btn {
+            padding: 8px 14px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chart-action-btn:hover {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-action-btn::before {
+            content: attr(data-icon);
+            font-size: 14px;
+        }
+
+        .animation-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 10px;
+        }
+
+        .chart-body {
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .chart-wrapper {
+            width: 100%;
+        }
+
+        /* Info Panel */
+        .info-panel {
+            padding: 30px 40px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .info-panel h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .info-panel ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-panel li {
+            padding: 8px 0;
+            color: #6c757d;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info-panel li::before {
+            content: "•";
+            color: #f5576c;
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-right: 8px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-sidebar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header, .insights-panel, .chart-grid, .info-panel, .filter-panel {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            .description {
+                font-size: 14px;
+            }
+
+            .chart-grid {
+                gap: 20px;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-header {
+                flex-direction: column;
+            }
+
+            .chart-actions {
+                margin-left: 0;
+                margin-top: 15px;
+                width: 100%;
+            }
+
+            .chart-action-btn {
+                flex: 1;
+            }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #e083eb 0%, #e5475c 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation Sidebar -->
+        <nav class="nav-sidebar">
+            <div class="nav-logo">⏳ Temporal</div>
+            <div class="nav-subtitle">Evolution Analysis</div>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#top" class="nav-link active" data-icon="🏠" data-section="top">Overview</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#chart-performance-section" class="nav-link" data-icon="📈" data-section="performance">Performance</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#chart-technology-section" class="nav-link" data-icon="🔬" data-section="technology">Technology</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#chart-efficiency-section" class="nav-link" data-icon="⚡" data-section="efficiency">Efficiency</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#chart-innovation-section" class="nav-link" data-icon="🏆" data-section="innovation">Innovation</a>
+                </li>
+            </ul>
+
+            <div class="nav-divider"></div>
+
+            <div class="progress-indicator">
+                <div class="progress-title">Your Progress</div>
+                <div class="progress-item viewed" data-chart="overview">Overview</div>
+                <div class="progress-item" data-chart="performance">Performance</div>
+                <div class="progress-item" data-chart="technology">Technology</div>
+                <div class="progress-item" data-chart="efficiency">Efficiency</div>
+                <div class="progress-item" data-chart="innovation">Innovation</div>
+            </div>
+
+            <div class="keyboard-hint">
+                <strong>Keyboard Shortcuts:</strong><br>
+                <kbd>1-4</kbd> Jump to chart<br>
+                <kbd>↑</kbd><kbd>↓</kbd> Navigate<br>
+                <kbd>I</kbd> Toggle insights<br>
+                <kbd>R</kbd> Reset filters
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content" id="main-content">
+            <div class="header" id="top">
+                <a href="report.html" class="back-link">Back to Full Report</a>
+                <h1>Temporal Evolution Analysis</h1>
+                <p class="description">
+                    Watch how embedding models have evolved from 2021 to 2025 through four animated
+                    visualizations. Explore performance trends, technology adoption patterns, efficiency
+                    improvements, and innovation leadership across developers and countries. Use the
+                    play/pause controls and timeline sliders to navigate through time.
+                </p>
+            </div>
+
+            <!-- Filter Panel -->
+            <div class="filter-panel">
+                <div class="filter-header">
+                    <h2>Filters & Controls</h2>
+                    <button class="reset-filters-btn" onclick="resetAllFilters()">↻ Reset All Filters</button>
+                </div>
+
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label class="filter-label" data-icon="📅">Year Selection</label>
+                        <select id="year-select" class="filter-input" onchange="updateYearSelection()" style="font-size: 16px; font-weight: 600;">
+                            <option value="2021">2021</option>
+                            <option value="2022">2022</option>
+                            <option value="2023">2023</option>
+                            <option value="2024">2024</option>
+                            <option value="2025" selected>2025</option>
+                        </select>
+                        <div class="year-range-display" id="year-mode-hint" style="margin-top: 8px; font-size: 12px; color: #718096;">
+                            Showing only models from 2025
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label" data-icon="🎨">Color By</label>
+                        <select id="color-by" class="filter-input" onchange="applyColorScheme()" style="font-size: 14px; font-weight: 600;">
+                            <option value="developer">Developer (Default)</option>
+                            <option value="performance">Performance (MTEB/BEIR Score)</option>
+                            <option value="year">Year</option>
+                            <option value="parameters">Parameter Count</option>
+                            <option value="efficiency">Efficiency (Score/Params)</option>
+                        </select>
+                        <div class="year-range-display" style="margin-top: 4px; font-size: 11px;">
+                            Changes visualization colors across all charts
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label" data-icon="🏢">Developer Filter</label>
+                        <select id="developer-filter" class="filter-input" onchange="applyFilters()">
+                            <option value="">All Developers</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="cohere">Cohere</option>
+                            <option value="mistral">Mistral AI</option>
+                            <option value="sentence-transformers">Sentence Transformers</option>
+                            <option value="google">Google</option>
+                            <option value="baai">BAAI</option>
+                            <option value="snowflake">Snowflake</option>
+                            <option value="ibm">IBM</option>
+                            <option value="nomic">Nomic AI</option>
+                            <option value="mixedbread">Mixedbread AI</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label" data-icon="🎯">Min Performance Score</label>
+                        <input type="range" id="perf-threshold" class="filter-input" min="0" max="100" value="0"
+                               oninput="updatePerfThreshold()">
+                        <div class="year-range-display">
+                            <span>MTEB Score: <strong id="perf-threshold-display">0</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label" data-icon="🔧">Technology Features</label>
+                        <select id="tech-filter" class="filter-input" multiple size="6" onchange="applyFilters()" style="height: auto; padding: 8px;">
+                            <option value="matryoshka">🪆 Matryoshka Support</option>
+                            <option value="binary">🔢 Binary Quantization</option>
+                            <option value="fp16">⚡ FP16</option>
+                            <option value="int8">📦 INT8</option>
+                            <option value="long-context">📚 Long Context (8K+)</option>
+                            <option value="large-dims">📐 Large Dimensions (1024+)</option>
+                        </select>
+                        <div class="year-range-display" style="margin-top: 4px;">
+                            <span style="font-size: 11px;">Hold Ctrl/Cmd for multiple selection</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+
+            <!-- Chart Grid -->
+            <div class="chart-grid">
+                <!-- Chart 1: Performance Evolution -->
+                <div class="chart-section" id="chart-performance-section" data-chart="performance">
+                    <div class="chart-header">
+                        <div class="chart-header-text">
+                            <h3>
+                                1. Performance Evolution Timeline
+                                <span class="animation-badge">Animated</span>
+                            </h3>
+                            <p>
+                                Trace the journey of model performance improvements over time. Each bubble represents a model,
+                                sized by parameter count, colored by developer. Watch the timeline unfold to see how
+                                MTEB/BEIR scores have improved year over year.
+                            </p>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn" data-icon="📷" onclick="exportChartPNG('chart-performance')">Export PNG</button>
+                            <button class="chart-action-btn" data-icon="⛶" onclick="fullscreenChart('chart-performance')">Fullscreen</button>
+                        </div>
+                    </div>
+                    <div class="chart-body">
+                        <div id="chart-performance" class="chart-wrapper"></div>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Technology Adoption -->
+                <div class="chart-section" id="chart-technology-section" data-chart="technology">
+                    <div class="chart-header">
+                        <div class="chart-header-text">
+                            <h3>
+                                2. Technology Adoption Timeline
+                                <span class="animation-badge">Animated</span>
+                            </h3>
+                            <p>
+                                Visualize when key technologies emerged and gained adoption. See the spread of Matryoshka
+                                embeddings, quantization strategies, architectural innovations, and feature support across
+                                the timeline. Darker colors indicate more models using each technology.
+                            </p>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn" data-icon="📷" onclick="exportChartPNG('chart-technology')">Export PNG</button>
+                            <button class="chart-action-btn" data-icon="⛶" onclick="fullscreenChart('chart-technology')">Fullscreen</button>
+                        </div>
+                    </div>
+                    <div class="chart-body">
+                        <div id="chart-technology" class="chart-wrapper"></div>
+                    </div>
+                </div>
+
+                <!-- Chart 3: Efficiency Evolution -->
+                <div class="chart-section" id="chart-efficiency-section" data-chart="efficiency">
+                    <div class="chart-header">
+                        <div class="chart-header-text">
+                            <h3>
+                                3. Efficiency Evolution
+                                <span class="animation-badge">Animated</span>
+                            </h3>
+                            <p>
+                                Track how models became more efficient over time. The red dashed line shows the "efficiency
+                                frontier" - models that achieved the best performance for their parameter count. Watch as
+                                this frontier shifts upward, showing continuous improvement in the performance-to-size ratio.
+                            </p>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn" data-icon="📷" onclick="exportChartPNG('chart-efficiency')">Export PNG</button>
+                            <button class="chart-action-btn" data-icon="⛶" onclick="fullscreenChart('chart-efficiency')">Fullscreen</button>
+                        </div>
+                    </div>
+                    <div class="chart-body">
+                        <div id="chart-efficiency" class="chart-wrapper"></div>
+                    </div>
+                </div>
+
+                <!-- Chart 4: Innovation Race -->
+                <div class="chart-section" id="chart-innovation-section" data-chart="innovation">
+                    <div class="chart-header">
+                        <div class="chart-header-text">
+                            <h3>
+                                4. Innovation Race: Developer & Geographic Leadership
+                                <span class="animation-badge">Animated</span>
+                            </h3>
+                            <p>
+                                Watch the innovation race unfold as different developers and countries compete to release
+                                high-quality embedding models. See which organizations and regions led the field at
+                                different points in time, and how leadership patterns shifted from 2021 to 2025.
+                            </p>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="chart-action-btn" data-icon="📷" onclick="exportChartPNG('chart-innovation')">Export PNG</button>
+                            <button class="chart-action-btn" data-icon="⛶" onclick="fullscreenChart('chart-innovation')">Fullscreen</button>
+                        </div>
+                    </div>
+                    <div class="chart-body">
+                        <div id="chart-innovation" class="chart-wrapper"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <h3>How to Use These Visualizations</h3>
+                <ul>
+                    <li><strong>Year Selection:</strong> Use the dropdown to select any year (2021-2025) - shows ONLY models from that specific year</li>
+                    <li><strong>Color By:</strong> Change visualization colors across all charts - choose from Developer, Performance (MTEB/BEIR), Year, Parameter Count, or Efficiency</li>
+                    <li><strong>Animation Controls:</strong> Each chart has ▶ Play, ⏸ Pause, ⏮ Reset, 🐢 Slow, and 🐇 Fast buttons to control the animation speed</li>
+                    <li><strong>Timeline Slider:</strong> Drag the slider below each chart to manually scrub through years</li>
+                    <li><strong>Filters:</strong> Filter by developer, performance score (MTEB), and multiple technology features using the filter panel</li>
+                    <li><strong>Technology Filter:</strong> Multi-select dropdown - hold Ctrl/Cmd to select multiple technologies (Matryoshka, quantization, context length, etc.)</li>
+                    <li><strong>Hover for Details:</strong> Hover over any data point to see comprehensive model information</li>
+                    <li><strong>Export:</strong> Click "Export PNG" on any chart to download a 1920x1080 high-resolution image</li>
+                    <li><strong>Fullscreen:</strong> Click "Fullscreen" to view any chart in fullscreen mode for better visibility</li>
+                    <li><strong>Navigation:</strong> Use the sidebar menu or keyboard shortcuts (1-4) to jump between sections</li>
+                    <li><strong>Keyboard Shortcuts:</strong> Press <kbd>I</kbd> for insights, <kbd>R</kbd> to reset filters</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Global chart data storage for filtering
+        let chartData = {
+            performance: null,
+            technology: null,
+            efficiency: null,
+            innovation: null
+        };
+
+        // Render charts
+        
+(function() {
+    console.log('Initializing performance chart...');
+
+    try {
+        var figData = {"data": [{"marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "BAAI (Beijing Academy of Artificial Intelligence)", "showlegend": true, "uid": "perf_BAAI (Beijing Academy of Artificial Intelligence)", "visible": true, "x": [], "y": [], "type": "scatter"}, {"customdata": [["300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", 768, 2048, 60.62, "N/A", "USA", "Gemma License (ai.google.dev/gemma/terms)", 2025, "Google DeepMind", 60.62, 300.0, 202.06666666666666], ["300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", 768, 2048, 60.93, "N/A", "USA", "Gemma License (ai.google.dev/gemma/terms)", 2025, "Google DeepMind", 60.93, 300.0, 203.1], ["300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", 768, 2048, 61.15, "N/A", "USA", "Gemma License (ai.google.dev/gemma/terms)", 2025, "Google DeepMind", 61.15, 300.0, 203.83333333333334]], "hovertemplate": "<b>%{text}</b><br>Developer: Google DeepMind<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [47.178497433907644, 47.178497433907644, 47.178497433907644], "sizemode": "diameter"}, "mode": "markers", "name": "Google DeepMind", "text": ["Embeddinggemma 300M Qat Q4 (300M Q4)", "Embeddinggemma 300M Qat Q8 (300M)", "Embeddinggemma 300M Bf16 (300M)"], "uid": "perf_Google DeepMind", "x": ["2025-09-04T00:00:00", "2025-09-04T00:00:00", "2025-09-04T00:00:00"], "y": [60.62, 60.93, 61.15], "type": "scatter"}, {"marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "IBM Research / IBM Granite Team", "showlegend": true, "uid": "perf_IBM Research / IBM Granite Team", "visible": true, "x": [], "y": [], "type": "scatter"}, {"marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "Mixedbread AI (Berlin)", "showlegend": true, "uid": "perf_Mixedbread AI (Berlin)", "visible": true, "x": [], "y": [], "type": "scatter"}, {"marker": {"color": "#2ca02c", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "Nomic AI", "showlegend": true, "uid": "perf_Nomic AI", "visible": true, "x": [], "y": [], "type": "scatter"}, {"customdata": [["8B", "Qwen3 dual-encoder with MRL", 4096, 40960, 70.58, "N/A", "China", "Apache 2.0", 2025, "Qwen Team, Alibaba Cloud / DAMO Academy", 70.58, 8000.0, 8.8225], ["4B", "Qwen3 dual-encoder with MRL", 2560, 40960, 69.45, "N/A", "China", "Apache 2.0", 2025, "Qwen Team, Alibaba Cloud / DAMO Academy", 69.45, 4000.0, 17.3625], ["4B", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", 2560, 40960, 69.45, "N/A", "China", "Apache 2.0", 2025, "Qwen Team, Alibaba Cloud / DAMO Academy", 69.45, 4000.0, 17.3625], ["600M", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", 1024, 32768, 64.33, "N/A", "China", "Apache 2.0", 2025, "Qwen Team, Alibaba Cloud / DAMO Academy", 64.33, 600.0, 107.21666666666667], ["600M", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", 1024, 32768, 64.0, "N/A", "China", "Apache 2.0", 2025, "Qwen Team, Alibaba Cloud / DAMO Academy", 64.0, 600.0, 106.66666666666667]], "hovertemplate": "<b>%{text}</b><br>Developer: Qwen Team, Alibaba Cloud / DAMO Academy<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [68.54716405614307, 64.03252827068496, 64.03252827068496, 51.68311708004109, 51.68311708004109], "sizemode": "diameter"}, "mode": "markers", "name": "Qwen Team, Alibaba Cloud / DAMO Academy", "text": ["Qwen3 (8B)", "Qwen3 (4B Q4)", "Qwen3 (4B)", "Qwen3 (6B FP16)", "Qwen3 (6B)"], "uid": "perf_Qwen Team, Alibaba Cloud / DAMO Academy", "x": ["2025-06-05T00:00:00", "2025-06-05T00:00:00", "2025-06-05T00:00:00", "2025-06-05T00:00:00", "2025-06-05T00:00:00"], "y": [70.58, 69.45, 69.45, 64.33, 64.0], "type": "scatter"}, {"marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "Snowflake Inc.", "showlegend": true, "uid": "perf_Snowflake Inc.", "visible": true, "x": [], "y": [], "type": "scatter"}], "layout": {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "title": {"font": {"size": 24}, "text": "Performance Evolution Timeline (2021-2025)", "x": 0.5, "xanchor": "center"}, "legend": {"orientation": "v", "yanchor": "bottom", "y": 0.01, "xanchor": "right", "x": 0.99, "bgcolor": "rgba(255, 255, 255, 0.95)", "bordercolor": "gray", "borderwidth": 1}, "xaxis": {"title": {"text": "Release Date"}, "showgrid": true, "gridwidth": 1, "gridcolor": "lightgray", "zeroline": false, "range": ["2023-08-06T20:24:00", "2025-10-10T03:36:00"]}, "yaxis": {"title": {"text": "Performance Score"}, "showgrid": true, "gridwidth": 1, "gridcolor": "lightgray", "zeroline": false, "tickformat": ".2f", "range": [52.415, 71.445]}, "height": 700, "autosize": true, "hovermode": "closest", "annotations": [{"font": {"color": "gray", "size": 11}, "showarrow": false, "text": "Bubble size represents parameter count (log scale)", "x": 0.5, "xanchor": "center", "xref": "paper", "y": -0.15, "yref": "paper"}], "margin": {"l": 80, "r": 100, "t": 140, "b": 100}, "updatemenus": [{"bgcolor": "lightblue", "bordercolor": "gray", "borderwidth": 2, "buttons": [{"args": [["2023", "2024", "2025"], {"frame": {"duration": 1000, "redraw": true}, "mode": "afterall", "fromcurrent": false, "transition": {"duration": 600, "easing": "cubic-in-out"}}], "label": "\u25b6 Play", "method": "animate"}, {"args": [[null], {"frame": {"duration": 0, "redraw": false}, "mode": "immediate", "transition": {"duration": 0}}], "label": "\u23f8 Pause", "method": "animate"}, {"args": [["2023"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "\u23ee Reset", "method": "animate"}, {"args": [["2023", "2024", "2025"], {"frame": {"duration": 1800, "redraw": true}, "mode": "afterall", "fromcurrent": false, "transition": {"duration": 900, "easing": "cubic-in-out"}}], "label": "\ud83d\udc22 Slow", "method": "animate"}, {"args": [["2023", "2024", "2025"], {"frame": {"duration": 500, "redraw": true}, "mode": "afterall", "fromcurrent": false, "transition": {"duration": 200, "easing": "linear"}}], "label": "\ud83d\udc07 Fast", "method": "animate"}], "direction": "left", "pad": {"r": 10, "t": 10}, "showactive": true, "type": "buttons", "x": 0.1, "xanchor": "left", "y": 1.12, "yanchor": "top"}], "sliders": [{"active": 2, "currentvalue": {"prefix": "Year: ", "visible": true, "xanchor": "right"}, "len": 0.85, "pad": {"b": 10, "t": 50}, "steps": [{"args": [["single_2023"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "2023", "method": "animate"}, {"args": [["single_2024"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "2024", "method": "animate"}, {"args": [["single_2025"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "2025", "method": "animate"}], "transition": {"duration": 300, "easing": "cubic-in-out"}, "x": 0.1, "xanchor": "left", "y": 0, "yanchor": "top"}]}, "frames": [{"data": [{"customdata": [["335M", "RoBERTa-based encoder with RetroMAE pretraining", 1024, 512, 64.23, 54.29, "China", "MIT", 2023, "BAAI (Beijing Academy of Artificial Intelligence)", 64.23, 335.0, 191.73134328358208]], "hovertemplate": "<b>%{text}</b><br>Developer: BAAI (Beijing Academy of Artificial Intelligence)<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [47.89508916084766], "sizemode": "diameter"}, "mode": "markers+lines", "name": "BAAI (Beijing Academy of Artificial Intelligence)", "text": ["Bge Large (335M)"], "uid": "perf_BAAI (Beijing Academy of Artificial Intelligence)", "x": ["2023-09-12T00:00:00"], "y": [64.23], "type": "scatter"}, {"line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers+lines", "name": "Google DeepMind", "showlegend": true, "uid": "perf_Google DeepMind", "visible": true, "x": [], "y": [], "type": "scatter"}, {"line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers+lines", "name": "IBM Research / IBM Granite Team", "showlegend": true, "uid": "perf_IBM Research / IBM Granite Team", "visible": true, "x": [], "y": [], "type": "scatter"}, {"line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers+lines", "name": "Mixedbread AI (Berlin)", "showlegend": true, "uid": "perf_Mixedbread AI (Berlin)", "visible": true, "x": [], "y": [], "type": "scatter"}, {"line": {"color": "#2ca02c", "dash": "dot", "width": 2}, "marker": {"color": "#2ca02c", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers+lines", "name": "Nomic AI", "showlegend": true, "uid": "perf_Nomic AI", "visible": true, "x": [], "y": [], "type": "scatter"}, {"line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers+lines", "name": "Qwen Team, Alibaba Cloud / DAMO Academy", "showlegend": true, "uid": "perf_Qwen Team, Alibaba Cloud / DAMO Academy", "visible": true, "x": [], "y": [], "type": "scatter"}, {"line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers+lines", "name": "Snowflake Inc.", "showlegend": true, "uid": "perf_Snowflake Inc.", "visible": true, "x": [], "y": [], "type": "scatter"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 255, 0.8)", "bordercolor": "gray", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(0, 0, 0, 0.5)", "size": 28}, "showarrow": false, "text": "<b>Year: 2023</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"color": "gray", "size": 11}, "showarrow": false, "text": "Bubble size represents parameter count (log scale)", "x": 0.5, "xanchor": "center", "xref": "paper", "y": -0.15, "yref": "paper"}]}, "name": "2023"}, {"data": [{"customdata": [["335M", "RoBERTa-based encoder with RetroMAE pretraining", 1024, 512, 64.23, 54.29, "China", "MIT", 2023, "BAAI (Beijing Academy of Artificial Intelligence)", 64.23, 335.0, 191.73134328358208], ["567M", "XLM-RoBERTa-based with RetroMAE, extended to 8192 tokens", 1024, 8192, 59.56, 48.8, "China", "MIT", 2024, "BAAI (Beijing Academy of Artificial Intelligence)", 59.56, 567.0, 105.0440917107584]], "hovertemplate": "<b>%{text}</b><br>Developer: BAAI (Beijing Academy of Artificial Intelligence)<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [47.89508916084766, 51.31522503566528], "sizemode": "diameter"}, "mode": "markers+lines", "name": "BAAI (Beijing Academy of Artificial Intelligence)", "text": ["Bge Large (335M)", "Bge M3 (567M)"], "uid": "perf_BAAI (Beijing Academy of Artificial Intelligence)", "x": ["2023-09-12T00:00:00", "2024-01-30T00:00:00"], "y": [64.23, 59.56], "type": "scatter"}, {"line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers+lines", "name": "Google DeepMind", "showlegend": true, "uid": "perf_Google DeepMind", "visible": true, "x": [], "y": [], "type": "scatter"}, {"customdata": [["30M", "RoBERTa-like (6 layers, 384 hidden size)", 384, 512, 56.5, 49.1, "USA", "Apache 2.0", 2024, "IBM Research / IBM Granite Team", 56.5, 30.0, 1883.3333333333335], ["278M", "XLM-RoBERTa-like (12 layers, 768 hidden size)", 768, 512, 58.3, 49.5, "USA", "Apache 2.0", 2024, "IBM Research / IBM Granite Team", 58.3, 278.0, 209.7122302158273]], "hovertemplate": "<b>%{text}</b><br>Developer: IBM Research / IBM Granite Team<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [32.37042540751409, 46.68406304910396], "sizemode": "diameter"}, "mode": "markers+lines", "name": "IBM Research / IBM Granite Team", "text": ["Granite (30M FP16)", "Granite (278M FP16)"], "uid": "perf_IBM Research / IBM Granite Team", "x": ["2024-12-18T00:00:00", "2024-12-18T00:00:00"], "y": [56.5, 58.3], "type": "scatter"}, {"customdata": [["335M", "BERT-large (24 layers, 16 attention heads)", 1024, 512, 64.68, 54.39, "Germany", "Apache 2.0", 2024, "Mixedbread AI (Berlin)", 64.68, 335.0, 193.07462686567166]], "hovertemplate": "<b>%{text}</b><br>Developer: Mixedbread AI (Berlin)<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [47.89508916084766], "sizemode": "diameter"}, "mode": "markers+lines", "name": "Mixedbread AI (Berlin)", "text": ["MxBai"], "uid": "perf_Mixedbread AI (Berlin)", "x": ["2024-03-08T00:00:00"], "y": [64.68], "type": "scatter"}, {"customdata": [["137M", "Modified BERT-base with RoPE, SwiGLU, Flash Attention", 768, 2048, 62.28, "N/A", "USA", "Apache 2.0", 2024, "Nomic AI", 62.28, 137.0, 454.5985401459854]], "hovertemplate": "<b>%{text}</b><br>Developer: Nomic AI<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "line": {"color": "#2ca02c", "dash": "dot", "width": 2}, "marker": {"color": "#2ca02c", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [42.09818629601855], "sizemode": "diameter"}, "mode": "markers+lines", "name": "Nomic AI", "text": ["Nomic Embed Text V1.5 (137M)"], "uid": "perf_Nomic AI", "x": ["2024-02-01T00:00:00"], "y": [62.28], "type": "scatter"}, {"line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers+lines", "name": "Qwen Team, Alibaba Cloud / DAMO Academy", "showlegend": true, "uid": "perf_Qwen Team, Alibaba Cloud / DAMO Academy", "visible": true, "x": [], "y": [], "type": "scatter"}, {"customdata": [["22M", "Optimized MiniLM-L6 variant", 384, 512, 53.28, 50.15, "USA", "Apache 2.0", 2024, "Snowflake Inc.", 53.28, 22.0, 2421.818181818182], ["110M", "E5-base-unsupervised variant", 768, 512, 54.9, 53.91, "USA", "Apache 2.0", 2024, "Snowflake Inc.", 54.9, 110.0, 499.09090909090907], ["137M", "Nomic-embed-text-unsupervised with RPE", 768, 2048, 54.83, 53.91, "USA", "Apache 2.0", 2024, "Snowflake Inc.", 54.83, 137.0, 400.21897810218974], ["335M", "E5-large-unsupervised variant", 1024, 512, 55.98, 55.98, "USA", "Apache 2.0", 2024, "Snowflake Inc.", 55.98, 335.0, 167.10447761194027], ["568M", "XLM-RoBERTa Large with RetroMAE pretraining", 1024, 8192, 55.6, 55.6, "USA", "Apache 2.0", 2024, "Snowflake Inc.", 55.6, 568.0, 97.88732394366198]], "hovertemplate": "<b>%{text}</b><br>Developer: Snowflake Inc.<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [30.425917540263892, 40.679844681799864, 42.09818629601855, 47.89508916084766, 51.32668399592607], "sizemode": "diameter"}, "mode": "markers+lines", "name": "Snowflake Inc.", "text": ["Snowflake Arctic (22M)", "Snowflake Arctic (110M)", "Snowflake Arctic (137M)", "Snowflake Arctic (335M)", "Snowflake Arctic (568M)"], "uid": "perf_Snowflake Inc.", "x": ["2024-04-16T00:00:00", "2024-04-16T00:00:00", "2024-04-16T00:00:00", "2024-04-16T00:00:00", "2024-12-04T00:00:00"], "y": [53.28, 54.9, 54.83, 55.98, 55.6], "type": "scatter"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 255, 0.8)", "bordercolor": "gray", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(0, 0, 0, 0.5)", "size": 28}, "showarrow": false, "text": "<b>Year: 2024</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"color": "gray", "size": 11}, "showarrow": false, "text": "Bubble size represents parameter count (log scale)", "x": 0.5, "xanchor": "center", "xref": "paper", "y": -0.15, "yref": "paper"}]}, "name": "2024"}, {"data": [{"customdata": [["335M", "RoBERTa-based encoder with RetroMAE pretraining", 1024, 512, 64.23, 54.29, "China", "MIT", 2023, "BAAI (Beijing Academy of Artificial Intelligence)", 64.23, 335.0, 191.73134328358208], ["567M", "XLM-RoBERTa-based with RetroMAE, extended to 8192 tokens", 1024, 8192, 59.56, 48.8, "China", "MIT", 2024, "BAAI (Beijing Academy of Artificial Intelligence)", 59.56, 567.0, 105.0440917107584]], "hovertemplate": "<b>%{text}</b><br>Developer: BAAI (Beijing Academy of Artificial Intelligence)<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [47.89508916084766, 51.31522503566528], "sizemode": "diameter"}, "mode": "markers+lines", "name": "BAAI (Beijing Academy of Artificial Intelligence)", "text": ["Bge Large (335M)", "Bge M3 (567M)"], "uid": "perf_BAAI (Beijing Academy of Artificial Intelligence)", "x": ["2023-09-12T00:00:00", "2024-01-30T00:00:00"], "y": [64.23, 59.56], "type": "scatter"}, {"customdata": [["300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", 768, 2048, 60.62, "N/A", "USA", "Gemma License (ai.google.dev/gemma/terms)", 2025, "Google DeepMind", 60.62, 300.0, 202.06666666666666], ["300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", 768, 2048, 60.93, "N/A", "USA", "Gemma License (ai.google.dev/gemma/terms)", 2025, "Google DeepMind", 60.93, 300.0, 203.1], ["300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", 768, 2048, 61.15, "N/A", "USA", "Gemma License (ai.google.dev/gemma/terms)", 2025, "Google DeepMind", 61.15, 300.0, 203.83333333333334]], "hovertemplate": "<b>%{text}</b><br>Developer: Google DeepMind<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [47.178497433907644, 47.178497433907644, 47.178497433907644], "sizemode": "diameter"}, "mode": "markers+lines", "name": "Google DeepMind", "text": ["Embeddinggemma 300M Qat Q4 (300M Q4)", "Embeddinggemma 300M Qat Q8 (300M)", "Embeddinggemma 300M Bf16 (300M)"], "uid": "perf_Google DeepMind", "x": ["2025-09-04T00:00:00", "2025-09-04T00:00:00", "2025-09-04T00:00:00"], "y": [60.62, 60.93, 61.15], "type": "scatter"}, {"customdata": [["30M", "RoBERTa-like (6 layers, 384 hidden size)", 384, 512, 56.5, 49.1, "USA", "Apache 2.0", 2024, "IBM Research / IBM Granite Team", 56.5, 30.0, 1883.3333333333335], ["278M", "XLM-RoBERTa-like (12 layers, 768 hidden size)", 768, 512, 58.3, 49.5, "USA", "Apache 2.0", 2024, "IBM Research / IBM Granite Team", 58.3, 278.0, 209.7122302158273]], "hovertemplate": "<b>%{text}</b><br>Developer: IBM Research / IBM Granite Team<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [32.37042540751409, 46.68406304910396], "sizemode": "diameter"}, "mode": "markers+lines", "name": "IBM Research / IBM Granite Team", "text": ["Granite (30M FP16)", "Granite (278M FP16)"], "uid": "perf_IBM Research / IBM Granite Team", "x": ["2024-12-18T00:00:00", "2024-12-18T00:00:00"], "y": [56.5, 58.3], "type": "scatter"}, {"customdata": [["335M", "BERT-large (24 layers, 16 attention heads)", 1024, 512, 64.68, 54.39, "Germany", "Apache 2.0", 2024, "Mixedbread AI (Berlin)", 64.68, 335.0, 193.07462686567166]], "hovertemplate": "<b>%{text}</b><br>Developer: Mixedbread AI (Berlin)<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [47.89508916084766], "sizemode": "diameter"}, "mode": "markers+lines", "name": "Mixedbread AI (Berlin)", "text": ["MxBai"], "uid": "perf_Mixedbread AI (Berlin)", "x": ["2024-03-08T00:00:00"], "y": [64.68], "type": "scatter"}, {"customdata": [["137M", "Modified BERT-base with RoPE, SwiGLU, Flash Attention", 768, 2048, 62.28, "N/A", "USA", "Apache 2.0", 2024, "Nomic AI", 62.28, 137.0, 454.5985401459854]], "hovertemplate": "<b>%{text}</b><br>Developer: Nomic AI<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "line": {"color": "#2ca02c", "dash": "dot", "width": 2}, "marker": {"color": "#2ca02c", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [42.09818629601855], "sizemode": "diameter"}, "mode": "markers+lines", "name": "Nomic AI", "text": ["Nomic Embed Text V1.5 (137M)"], "uid": "perf_Nomic AI", "x": ["2024-02-01T00:00:00"], "y": [62.28], "type": "scatter"}, {"customdata": [["8B", "Qwen3 dual-encoder with MRL", 4096, 40960, 70.58, "N/A", "China", "Apache 2.0", 2025, "Qwen Team, Alibaba Cloud / DAMO Academy", 70.58, 8000.0, 8.8225], ["4B", "Qwen3 dual-encoder with MRL", 2560, 40960, 69.45, "N/A", "China", "Apache 2.0", 2025, "Qwen Team, Alibaba Cloud / DAMO Academy", 69.45, 4000.0, 17.3625], ["4B", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", 2560, 40960, 69.45, "N/A", "China", "Apache 2.0", 2025, "Qwen Team, Alibaba Cloud / DAMO Academy", 69.45, 4000.0, 17.3625], ["600M", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", 1024, 32768, 64.33, "N/A", "China", "Apache 2.0", 2025, "Qwen Team, Alibaba Cloud / DAMO Academy", 64.33, 600.0, 107.21666666666667], ["600M", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", 1024, 32768, 64.0, "N/A", "China", "Apache 2.0", 2025, "Qwen Team, Alibaba Cloud / DAMO Academy", 64.0, 600.0, 106.66666666666667]], "hovertemplate": "<b>%{text}</b><br>Developer: Qwen Team, Alibaba Cloud / DAMO Academy<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [68.54716405614307, 64.03252827068496, 64.03252827068496, 51.68311708004109, 51.68311708004109], "sizemode": "diameter"}, "mode": "markers+lines", "name": "Qwen Team, Alibaba Cloud / DAMO Academy", "text": ["Qwen3 (8B)", "Qwen3 (4B Q4)", "Qwen3 (4B)", "Qwen3 (6B FP16)", "Qwen3 (6B)"], "uid": "perf_Qwen Team, Alibaba Cloud / DAMO Academy", "x": ["2025-06-05T00:00:00", "2025-06-05T00:00:00", "2025-06-05T00:00:00", "2025-06-05T00:00:00", "2025-06-05T00:00:00"], "y": [70.58, 69.45, 69.45, 64.33, 64.0], "type": "scatter"}, {"customdata": [["22M", "Optimized MiniLM-L6 variant", 384, 512, 53.28, 50.15, "USA", "Apache 2.0", 2024, "Snowflake Inc.", 53.28, 22.0, 2421.818181818182], ["110M", "E5-base-unsupervised variant", 768, 512, 54.9, 53.91, "USA", "Apache 2.0", 2024, "Snowflake Inc.", 54.9, 110.0, 499.09090909090907], ["137M", "Nomic-embed-text-unsupervised with RPE", 768, 2048, 54.83, 53.91, "USA", "Apache 2.0", 2024, "Snowflake Inc.", 54.83, 137.0, 400.21897810218974], ["335M", "E5-large-unsupervised variant", 1024, 512, 55.98, 55.98, "USA", "Apache 2.0", 2024, "Snowflake Inc.", 55.98, 335.0, 167.10447761194027], ["568M", "XLM-RoBERTa Large with RetroMAE pretraining", 1024, 8192, 55.6, 55.6, "USA", "Apache 2.0", 2024, "Snowflake Inc.", 55.6, 568.0, 97.88732394366198]], "hovertemplate": "<b>%{text}</b><br>Developer: Snowflake Inc.<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "line": {"color": "#7f7f7f", "dash": "dot", "width": 2}, "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [30.425917540263892, 40.679844681799864, 42.09818629601855, 47.89508916084766, 51.32668399592607], "sizemode": "diameter"}, "mode": "markers+lines", "name": "Snowflake Inc.", "text": ["Snowflake Arctic (22M)", "Snowflake Arctic (110M)", "Snowflake Arctic (137M)", "Snowflake Arctic (335M)", "Snowflake Arctic (568M)"], "uid": "perf_Snowflake Inc.", "x": ["2024-04-16T00:00:00", "2024-04-16T00:00:00", "2024-04-16T00:00:00", "2024-04-16T00:00:00", "2024-12-04T00:00:00"], "y": [53.28, 54.9, 54.83, 55.98, 55.6], "type": "scatter"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 255, 0.8)", "bordercolor": "gray", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(0, 0, 0, 0.5)", "size": 28}, "showarrow": false, "text": "<b>Year: 2025</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"color": "gray", "size": 11}, "showarrow": false, "text": "Bubble size represents parameter count (log scale)", "x": 0.5, "xanchor": "center", "xref": "paper", "y": -0.15, "yref": "paper"}]}, "name": "2025"}, {"data": [{"customdata": [["335M", "RoBERTa-based encoder with RetroMAE pretraining", 1024, 512, 64.23, 54.29, "China", "MIT", 2023, "BAAI (Beijing Academy of Artificial Intelligence)", 64.23, 335.0, 191.73134328358208]], "hovertemplate": "<b>%{text}</b><br>Developer: BAAI (Beijing Academy of Artificial Intelligence)<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [47.89508916084766], "sizemode": "diameter"}, "mode": "markers", "name": "BAAI (Beijing Academy of Artificial Intelligence)", "text": ["Bge Large (335M)"], "uid": "perf_BAAI (Beijing Academy of Artificial Intelligence)", "x": ["2023-09-12T00:00:00"], "y": [64.23], "type": "scatter"}, {"marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "Google DeepMind", "showlegend": true, "uid": "perf_Google DeepMind", "visible": true, "x": [], "y": [], "type": "scatter"}, {"marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "IBM Research / IBM Granite Team", "showlegend": true, "uid": "perf_IBM Research / IBM Granite Team", "visible": true, "x": [], "y": [], "type": "scatter"}, {"marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "Mixedbread AI (Berlin)", "showlegend": true, "uid": "perf_Mixedbread AI (Berlin)", "visible": true, "x": [], "y": [], "type": "scatter"}, {"marker": {"color": "#2ca02c", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "Nomic AI", "showlegend": true, "uid": "perf_Nomic AI", "visible": true, "x": [], "y": [], "type": "scatter"}, {"marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "Qwen Team, Alibaba Cloud / DAMO Academy", "showlegend": true, "uid": "perf_Qwen Team, Alibaba Cloud / DAMO Academy", "visible": true, "x": [], "y": [], "type": "scatter"}, {"marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "Snowflake Inc.", "showlegend": true, "uid": "perf_Snowflake Inc.", "visible": true, "x": [], "y": [], "type": "scatter"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 200, 0.9)", "bordercolor": "orange", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(255, 100, 0, 0.6)", "size": 28}, "showarrow": false, "text": "<b>Year: 2023 ONLY</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"color": "gray", "size": 11}, "showarrow": false, "text": "Bubble size represents parameter count (log scale)", "x": 0.5, "xanchor": "center", "xref": "paper", "y": -0.15, "yref": "paper"}]}, "name": "single_2023"}, {"data": [{"customdata": [["567M", "XLM-RoBERTa-based with RetroMAE, extended to 8192 tokens", 1024, 8192, 59.56, 48.8, "China", "MIT", 2024, "BAAI (Beijing Academy of Artificial Intelligence)", 59.56, 567.0, 105.0440917107584]], "hovertemplate": "<b>%{text}</b><br>Developer: BAAI (Beijing Academy of Artificial Intelligence)<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [51.31522503566528], "sizemode": "diameter"}, "mode": "markers", "name": "BAAI (Beijing Academy of Artificial Intelligence)", "text": ["Bge M3 (567M)"], "uid": "perf_BAAI (Beijing Academy of Artificial Intelligence)", "x": ["2024-01-30T00:00:00"], "y": [59.56], "type": "scatter"}, {"marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "Google DeepMind", "showlegend": true, "uid": "perf_Google DeepMind", "visible": true, "x": [], "y": [], "type": "scatter"}, {"customdata": [["30M", "RoBERTa-like (6 layers, 384 hidden size)", 384, 512, 56.5, 49.1, "USA", "Apache 2.0", 2024, "IBM Research / IBM Granite Team", 56.5, 30.0, 1883.3333333333335], ["278M", "XLM-RoBERTa-like (12 layers, 768 hidden size)", 768, 512, 58.3, 49.5, "USA", "Apache 2.0", 2024, "IBM Research / IBM Granite Team", 58.3, 278.0, 209.7122302158273]], "hovertemplate": "<b>%{text}</b><br>Developer: IBM Research / IBM Granite Team<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [32.37042540751409, 46.68406304910396], "sizemode": "diameter"}, "mode": "markers", "name": "IBM Research / IBM Granite Team", "text": ["Granite (30M FP16)", "Granite (278M FP16)"], "uid": "perf_IBM Research / IBM Granite Team", "x": ["2024-12-18T00:00:00", "2024-12-18T00:00:00"], "y": [56.5, 58.3], "type": "scatter"}, {"customdata": [["335M", "BERT-large (24 layers, 16 attention heads)", 1024, 512, 64.68, 54.39, "Germany", "Apache 2.0", 2024, "Mixedbread AI (Berlin)", 64.68, 335.0, 193.07462686567166]], "hovertemplate": "<b>%{text}</b><br>Developer: Mixedbread AI (Berlin)<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [47.89508916084766], "sizemode": "diameter"}, "mode": "markers", "name": "Mixedbread AI (Berlin)", "text": ["MxBai"], "uid": "perf_Mixedbread AI (Berlin)", "x": ["2024-03-08T00:00:00"], "y": [64.68], "type": "scatter"}, {"customdata": [["137M", "Modified BERT-base with RoPE, SwiGLU, Flash Attention", 768, 2048, 62.28, "N/A", "USA", "Apache 2.0", 2024, "Nomic AI", 62.28, 137.0, 454.5985401459854]], "hovertemplate": "<b>%{text}</b><br>Developer: Nomic AI<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "marker": {"color": "#2ca02c", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [42.09818629601855], "sizemode": "diameter"}, "mode": "markers", "name": "Nomic AI", "text": ["Nomic Embed Text V1.5 (137M)"], "uid": "perf_Nomic AI", "x": ["2024-02-01T00:00:00"], "y": [62.28], "type": "scatter"}, {"marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "Qwen Team, Alibaba Cloud / DAMO Academy", "showlegend": true, "uid": "perf_Qwen Team, Alibaba Cloud / DAMO Academy", "visible": true, "x": [], "y": [], "type": "scatter"}, {"customdata": [["22M", "Optimized MiniLM-L6 variant", 384, 512, 53.28, 50.15, "USA", "Apache 2.0", 2024, "Snowflake Inc.", 53.28, 22.0, 2421.818181818182], ["110M", "E5-base-unsupervised variant", 768, 512, 54.9, 53.91, "USA", "Apache 2.0", 2024, "Snowflake Inc.", 54.9, 110.0, 499.09090909090907], ["137M", "Nomic-embed-text-unsupervised with RPE", 768, 2048, 54.83, 53.91, "USA", "Apache 2.0", 2024, "Snowflake Inc.", 54.83, 137.0, 400.21897810218974], ["335M", "E5-large-unsupervised variant", 1024, 512, 55.98, 55.98, "USA", "Apache 2.0", 2024, "Snowflake Inc.", 55.98, 335.0, 167.10447761194027], ["568M", "XLM-RoBERTa Large with RetroMAE pretraining", 1024, 8192, 55.6, 55.6, "USA", "Apache 2.0", 2024, "Snowflake Inc.", 55.6, 568.0, 97.88732394366198]], "hovertemplate": "<b>%{text}</b><br>Developer: Snowflake Inc.<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [30.425917540263892, 40.679844681799864, 42.09818629601855, 47.89508916084766, 51.32668399592607], "sizemode": "diameter"}, "mode": "markers", "name": "Snowflake Inc.", "text": ["Snowflake Arctic (22M)", "Snowflake Arctic (110M)", "Snowflake Arctic (137M)", "Snowflake Arctic (335M)", "Snowflake Arctic (568M)"], "uid": "perf_Snowflake Inc.", "x": ["2024-04-16T00:00:00", "2024-04-16T00:00:00", "2024-04-16T00:00:00", "2024-04-16T00:00:00", "2024-12-04T00:00:00"], "y": [53.28, 54.9, 54.83, 55.98, 55.6], "type": "scatter"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 200, 0.9)", "bordercolor": "orange", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(255, 100, 0, 0.6)", "size": 28}, "showarrow": false, "text": "<b>Year: 2024 ONLY</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"color": "gray", "size": 11}, "showarrow": false, "text": "Bubble size represents parameter count (log scale)", "x": 0.5, "xanchor": "center", "xref": "paper", "y": -0.15, "yref": "paper"}]}, "name": "single_2024"}, {"data": [{"marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "BAAI (Beijing Academy of Artificial Intelligence)", "showlegend": true, "uid": "perf_BAAI (Beijing Academy of Artificial Intelligence)", "visible": true, "x": [], "y": [], "type": "scatter"}, {"customdata": [["300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", 768, 2048, 60.62, "N/A", "USA", "Gemma License (ai.google.dev/gemma/terms)", 2025, "Google DeepMind", 60.62, 300.0, 202.06666666666666], ["300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", 768, 2048, 60.93, "N/A", "USA", "Gemma License (ai.google.dev/gemma/terms)", 2025, "Google DeepMind", 60.93, 300.0, 203.1], ["300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", 768, 2048, 61.15, "N/A", "USA", "Gemma License (ai.google.dev/gemma/terms)", 2025, "Google DeepMind", 61.15, 300.0, 203.83333333333334]], "hovertemplate": "<b>%{text}</b><br>Developer: Google DeepMind<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [47.178497433907644, 47.178497433907644, 47.178497433907644], "sizemode": "diameter"}, "mode": "markers", "name": "Google DeepMind", "text": ["Embeddinggemma 300M Qat Q4 (300M Q4)", "Embeddinggemma 300M Qat Q8 (300M)", "Embeddinggemma 300M Bf16 (300M)"], "uid": "perf_Google DeepMind", "x": ["2025-09-04T00:00:00", "2025-09-04T00:00:00", "2025-09-04T00:00:00"], "y": [60.62, 60.93, 61.15], "type": "scatter"}, {"marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "IBM Research / IBM Granite Team", "showlegend": true, "uid": "perf_IBM Research / IBM Granite Team", "visible": true, "x": [], "y": [], "type": "scatter"}, {"marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "Mixedbread AI (Berlin)", "showlegend": true, "uid": "perf_Mixedbread AI (Berlin)", "visible": true, "x": [], "y": [], "type": "scatter"}, {"marker": {"color": "#2ca02c", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "Nomic AI", "showlegend": true, "uid": "perf_Nomic AI", "visible": true, "x": [], "y": [], "type": "scatter"}, {"customdata": [["8B", "Qwen3 dual-encoder with MRL", 4096, 40960, 70.58, "N/A", "China", "Apache 2.0", 2025, "Qwen Team, Alibaba Cloud / DAMO Academy", 70.58, 8000.0, 8.8225], ["4B", "Qwen3 dual-encoder with MRL", 2560, 40960, 69.45, "N/A", "China", "Apache 2.0", 2025, "Qwen Team, Alibaba Cloud / DAMO Academy", 69.45, 4000.0, 17.3625], ["4B", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", 2560, 40960, 69.45, "N/A", "China", "Apache 2.0", 2025, "Qwen Team, Alibaba Cloud / DAMO Academy", 69.45, 4000.0, 17.3625], ["600M", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", 1024, 32768, 64.33, "N/A", "China", "Apache 2.0", 2025, "Qwen Team, Alibaba Cloud / DAMO Academy", 64.33, 600.0, 107.21666666666667], ["600M", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", 1024, 32768, 64.0, "N/A", "China", "Apache 2.0", 2025, "Qwen Team, Alibaba Cloud / DAMO Academy", 64.0, 600.0, 106.66666666666667]], "hovertemplate": "<b>%{text}</b><br>Developer: Qwen Team, Alibaba Cloud / DAMO Academy<br>Released: %{x|%Y-%m-%d}<br>Performance: %{y:.2f}<br>Parameters: %{customdata[0]}<br>Architecture: %{customdata[1]}<br>Dimensions: %{customdata[2]}<br>Context Length: %{customdata[3]}<br>MTEB Score: %{customdata[4]}<br>BEIR Score: %{customdata[5]}<br>Country: %{customdata[6]}<br>License: %{customdata[7]}<br><extra></extra>", "marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": [68.54716405614307, 64.03252827068496, 64.03252827068496, 51.68311708004109, 51.68311708004109], "sizemode": "diameter"}, "mode": "markers", "name": "Qwen Team, Alibaba Cloud / DAMO Academy", "text": ["Qwen3 (8B)", "Qwen3 (4B Q4)", "Qwen3 (4B)", "Qwen3 (6B FP16)", "Qwen3 (6B)"], "uid": "perf_Qwen Team, Alibaba Cloud / DAMO Academy", "x": ["2025-06-05T00:00:00", "2025-06-05T00:00:00", "2025-06-05T00:00:00", "2025-06-05T00:00:00", "2025-06-05T00:00:00"], "y": [70.58, 69.45, 69.45, 64.33, 64.0], "type": "scatter"}, {"marker": {"color": "#7f7f7f", "line": {"color": "white", "width": 2}, "opacity": 0.7, "size": []}, "mode": "markers", "name": "Snowflake Inc.", "showlegend": true, "uid": "perf_Snowflake Inc.", "visible": true, "x": [], "y": [], "type": "scatter"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 200, 0.9)", "bordercolor": "orange", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(255, 100, 0, 0.6)", "size": 28}, "showarrow": false, "text": "<b>Year: 2025 ONLY</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"color": "gray", "size": 11}, "showarrow": false, "text": "Bubble size represents parameter count (log scale)", "x": 0.5, "xanchor": "center", "xref": "paper", "y": -0.15, "yref": "paper"}]}, "name": "single_2025"}]};
+        var config = {"displayModeBar": true, "displaylogo": false, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "toImageButtonOptions": {"format": "png", "filename": "rag_benchmark_chart", "height": 800, "width": 1200, "scale": 2}};
+
+        console.log('performance data loaded successfully');
+
+        // Render the chart
+        Plotly.newPlot('chart-performance', figData.data, figData.layout, config)
+            .then(function() {
+                console.log('performance rendered successfully');
+
+                // Apply frames if present (for animation)
+                if (figData.frames && figData.frames.length > 0) {
+                    Plotly.addFrames('chart-performance', figData.frames);
+                    console.log('performance animation frames added');
+                }
+            })
+            .catch(function(err) {
+                console.error('performance rendering error:', err);
+            });
+    } catch(err) {
+        console.error('performance initialization error:', err);
+    }
+})();
+
+        
+(function() {
+    console.log('Initializing technology chart...');
+
+    try {
+        var figData = {"data": [{"hovertemplate": "%{hovertext}<extra></extra>", "hovertext": ["<b>Long Context (8K+)</b><br>Total models: 5<br>First adopted: 2025<br>Years active: 2025-2025<br><br>Recent models:<br>\u2022 Qwen3 (8B)<br>\u2022 Qwen3 (4B Q4)<br>\u2022 Qwen3 (4B)<br>\u2022 Qwen3 (6B FP16)<br>\u2022 Qwen3 (6B)", "<b>Large Dimensions (1024+)</b><br>Total models: 9<br>First adopted: 2024<br>Years active: 2024-2025<br><br>Recent models:<br>\u2022 Qwen3 (8B)<br>\u2022 Qwen3 (4B Q4)<br>\u2022 Qwen3 (4B)<br>\u2022 Qwen3 (6B FP16)<br>\u2022 Qwen3 (6B)", "<b>BERT-based</b><br>Total models: 9<br>First adopted: 2021<br>Years active: 2021-2025<br><br>Recent models:<br>\u2022 Granite (278M FP16)<br>\u2022 MxBai<br>\u2022 Nomic Embed Text V1.5 (137M)<br>\u2022 Snowflake Arctic (568M)<br>\u2022 Bge M3 (567M)", "<b>FP16 Quantization</b><br>Total models: 10<br>First adopted: 2021<br>Years active: 2021-2025<br><br>Recent models:<br>\u2022 MxBai<br>\u2022 Snowflake Arctic (568M)<br>\u2022 Bge M3 (567M)<br>\u2022 Qwen3 (6B FP16)<br>\u2022 Embeddinggemma 300M Bf16 (300M)", "<b>Matryoshka Support</b><br>Total models: 13<br>First adopted: 2024<br>Years active: 2024-2025<br><br>Recent models:<br>\u2022 Qwen3 (6B FP16)<br>\u2022 Qwen3 (6B)<br>\u2022 Embeddinggemma 300M Qat Q4 (300M Q4)<br>\u2022 Embeddinggemma 300M Qat Q8 (300M)<br>\u2022 Embeddinggemma 300M Bf16 (300M)", "<b>Binary Support</b><br>Total models: 19<br>First adopted: 2021<br>Years active: 2021-2025<br><br>Recent models:<br>\u2022 Qwen3 (6B FP16)<br>\u2022 Qwen3 (6B)<br>\u2022 Embeddinggemma 300M Qat Q4 (300M Q4)<br>\u2022 Embeddinggemma 300M Qat Q8 (300M)<br>\u2022 Embeddinggemma 300M Bf16 (300M)"], "marker": {"color": ["rgba(214, 39, 40, 1.0)", "rgba(140, 86, 75, 1.0)", "rgba(44, 160, 44, 1.0)", "rgba(255, 127, 14, 1.0)", "rgba(148, 103, 189, 1.0)", "rgba(255, 127, 14, 1.0)"], "line": {"color": "white", "width": 2}}, "orientation": "h", "showlegend": false, "text": ["5", "9", "9", "10", "13", "19"], "textfont": {"color": "black", "size": 11}, "textposition": "outside", "uid": "racing_bars", "x": [5, 9, 9, 10, 13, 19], "y": ["Long Context (8K+)", "Large Dimensions (1024+)", "BERT-based", "FP16 Quantization", "Matryoshka Support", "Binary Support"], "type": "bar"}], "layout": {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "title": {"font": {"size": 24}, "text": "Technology Adoption Race (2021-2025)", "x": 0.5, "xanchor": "center"}, "xaxis": {"title": {"text": "Cumulative Models Adopting Technology"}, "range": [0, 21.849999999999998], "showgrid": true, "gridcolor": "lightgray"}, "yaxis": {"tickfont": {"size": 11}, "title": {"text": "Technology"}, "showgrid": false}, "height": 500, "autosize": true, "barmode": "overlay", "showlegend": false, "margin": {"l": 220, "r": 100, "t": 130, "b": 100}, "updatemenus": [{"bgcolor": "lightgreen", "bordercolor": "gray", "borderwidth": 2, "buttons": [{"args": [["2021", "2023", "2024", "2025"], {"frame": {"duration": 1200, "redraw": true}, "mode": "afterall", "fromcurrent": false, "transition": {"duration": 700, "easing": "cubic-in-out"}}], "label": "\u25b6 Play", "method": "animate"}, {"args": [[null], {"frame": {"duration": 0, "redraw": false}, "mode": "immediate", "transition": {"duration": 0}}], "label": "\u23f8 Pause", "method": "animate"}, {"args": [["2021"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "\u23ee Reset", "method": "animate"}, {"args": [["2021", "2023", "2024", "2025"], {"frame": {"duration": 2000, "redraw": true}, "mode": "afterall", "fromcurrent": false, "transition": {"duration": 1000, "easing": "cubic-in-out"}}], "label": "\ud83d\udc22 Slow", "method": "animate"}, {"args": [["2021", "2023", "2024", "2025"], {"frame": {"duration": 600, "redraw": true}, "mode": "afterall", "fromcurrent": false, "transition": {"duration": 250, "easing": "linear"}}], "label": "\ud83d\udc07 Fast", "method": "animate"}], "direction": "left", "pad": {"r": 10, "t": 10}, "showactive": true, "type": "buttons", "x": 0.1, "xanchor": "left", "y": 1.12, "yanchor": "top"}], "sliders": [{"active": 3, "currentvalue": {"prefix": "Year: ", "visible": true, "xanchor": "right"}, "len": 0.85, "pad": {"b": 10, "t": 50}, "steps": [{"args": [["single_2021"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "2021", "method": "animate"}, {"args": [["single_2023"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "2023", "method": "animate"}, {"args": [["single_2024"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "2024", "method": "animate"}, {"args": [["single_2025"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "2025", "method": "animate"}], "transition": {"duration": 300, "easing": "cubic-in-out"}, "x": 0.1, "xanchor": "left", "y": 0, "yanchor": "top"}]}, "frames": [{"data": [{"hovertemplate": "%{hovertext}<extra></extra>", "hovertext": ["<b>Matryoshka Support</b><br>Total models: 0<br>First adopted: 2024<br>Years active: 2024-2021<br><br>Recent models:<br>", "<b>Large Dimensions (1024+)</b><br>Total models: 0<br>First adopted: 2024<br>Years active: 2024-2021<br><br>Recent models:<br>", "<b>Long Context (8K+)</b><br>Total models: 0<br>First adopted: 2025<br>Years active: 2025-2021<br><br>Recent models:<br>", "<b>Binary Support</b><br>Total models: 2<br>First adopted: 2021<br>Years active: 2021-2021<br><br>Recent models:<br>\u2022 All-MiniLM (22M)<br>\u2022 All-MiniLM (33M)", "<b>FP16 Quantization</b><br>Total models: 2<br>First adopted: 2021<br>Years active: 2021-2021<br><br>Recent models:<br>\u2022 All-MiniLM (22M)<br>\u2022 All-MiniLM (33M)", "<b>BERT-based</b><br>Total models: 2<br>First adopted: 2021<br>Years active: 2021-2021<br><br>Recent models:<br>\u2022 All-MiniLM (22M)<br>\u2022 All-MiniLM (33M)"], "marker": {"color": ["rgba(148, 103, 189, 1.0)", "rgba(140, 86, 75, 1.0)", "rgba(214, 39, 40, 1.0)", "rgba(255, 127, 14, 1.0)", "rgba(255, 127, 14, 1.0)", "rgba(44, 160, 44, 1.0)"], "line": {"color": "white", "width": 2}}, "orientation": "h", "showlegend": false, "text": ["0", "0", "0", "2", "2", "2"], "textfont": {"color": "black", "size": 11}, "textposition": "outside", "uid": "racing_bars", "x": [0, 0, 0, 2, 2, 2], "y": ["Matryoshka Support", "Large Dimensions (1024+)", "Long Context (8K+)", "Binary Support", "FP16 Quantization", "BERT-based"], "type": "bar"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 255, 0.8)", "bordercolor": "gray", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(0, 0, 0, 0.5)", "size": 28}, "showarrow": false, "text": "<b>Through Year: 2021</b>", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.05, "yanchor": "bottom", "yref": "paper"}]}, "name": "2021"}, {"data": [{"hovertemplate": "%{hovertext}<extra></extra>", "hovertext": ["<b>Matryoshka Support</b><br>Total models: 0<br>First adopted: 2024<br>Years active: 2024-2023<br><br>Recent models:<br>", "<b>Large Dimensions (1024+)</b><br>Total models: 0<br>First adopted: 2024<br>Years active: 2024-2023<br><br>Recent models:<br>", "<b>Long Context (8K+)</b><br>Total models: 0<br>First adopted: 2025<br>Years active: 2025-2023<br><br>Recent models:<br>", "<b>Binary Support</b><br>Total models: 3<br>First adopted: 2021<br>Years active: 2021-2023<br><br>Recent models:<br>\u2022 All-MiniLM (22M)<br>\u2022 All-MiniLM (33M)<br>\u2022 Bge Large (335M)", "<b>FP16 Quantization</b><br>Total models: 3<br>First adopted: 2021<br>Years active: 2021-2023<br><br>Recent models:<br>\u2022 All-MiniLM (22M)<br>\u2022 All-MiniLM (33M)<br>\u2022 Bge Large (335M)", "<b>BERT-based</b><br>Total models: 3<br>First adopted: 2021<br>Years active: 2021-2023<br><br>Recent models:<br>\u2022 All-MiniLM (22M)<br>\u2022 All-MiniLM (33M)<br>\u2022 Bge Large (335M)"], "marker": {"color": ["rgba(148, 103, 189, 1.0)", "rgba(140, 86, 75, 1.0)", "rgba(214, 39, 40, 1.0)", "rgba(255, 127, 14, 1.0)", "rgba(255, 127, 14, 1.0)", "rgba(44, 160, 44, 1.0)"], "line": {"color": "white", "width": 2}}, "orientation": "h", "showlegend": false, "text": ["0", "0", "0", "3", "3", "3"], "textfont": {"color": "black", "size": 11}, "textposition": "outside", "uid": "racing_bars", "x": [0, 0, 0, 3, 3, 3], "y": ["Matryoshka Support", "Large Dimensions (1024+)", "Long Context (8K+)", "Binary Support", "FP16 Quantization", "BERT-based"], "type": "bar"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 255, 0.8)", "bordercolor": "gray", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(0, 0, 0, 0.5)", "size": 28}, "showarrow": false, "text": "<b>Through Year: 2023</b>", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.05, "yanchor": "bottom", "yref": "paper"}]}, "name": "2023"}, {"data": [{"hovertemplate": "%{hovertext}<extra></extra>", "hovertext": ["<b>Long Context (8K+)</b><br>Total models: 0<br>First adopted: 2025<br>Years active: 2025-2024<br><br>Recent models:<br>", "<b>Large Dimensions (1024+)</b><br>Total models: 4<br>First adopted: 2024<br>Years active: 2024-2024<br><br>Recent models:<br>\u2022 Snowflake Arctic (335M)<br>\u2022 MxBai<br>\u2022 Snowflake Arctic (568M)<br>\u2022 Bge M3 (567M)", "<b>Matryoshka Support</b><br>Total models: 5<br>First adopted: 2024<br>Years active: 2024-2024<br><br>Recent models:<br>\u2022 Snowflake Arctic (110M)<br>\u2022 Snowflake Arctic (335M)<br>\u2022 MxBai<br>\u2022 Nomic Embed Text V1.5 (137M)<br>\u2022 Snowflake Arctic (568M)", "<b>FP16 Quantization</b><br>Total models: 8<br>First adopted: 2021<br>Years active: 2021-2024<br><br>Recent models:<br>\u2022 Granite (30M FP16)<br>\u2022 Granite (278M FP16)<br>\u2022 MxBai<br>\u2022 Snowflake Arctic (568M)<br>\u2022 Bge M3 (567M)", "<b>BERT-based</b><br>Total models: 9<br>First adopted: 2021<br>Years active: 2021-2024<br><br>Recent models:<br>\u2022 Granite (278M FP16)<br>\u2022 MxBai<br>\u2022 Nomic Embed Text V1.5 (137M)<br>\u2022 Snowflake Arctic (568M)<br>\u2022 Bge M3 (567M)", "<b>Binary Support</b><br>Total models: 11<br>First adopted: 2021<br>Years active: 2021-2024<br><br>Recent models:<br>\u2022 Snowflake Arctic (335M)<br>\u2022 MxBai<br>\u2022 Nomic Embed Text V1.5 (137M)<br>\u2022 Snowflake Arctic (568M)<br>\u2022 Bge M3 (567M)"], "marker": {"color": ["rgba(214, 39, 40, 1.0)", "rgba(140, 86, 75, 1.0)", "rgba(148, 103, 189, 1.0)", "rgba(255, 127, 14, 1.0)", "rgba(44, 160, 44, 1.0)", "rgba(255, 127, 14, 1.0)"], "line": {"color": "white", "width": 2}}, "orientation": "h", "showlegend": false, "text": ["0", "4", "5", "8", "9", "11"], "textfont": {"color": "black", "size": 11}, "textposition": "outside", "uid": "racing_bars", "x": [0, 4, 5, 8, 9, 11], "y": ["Long Context (8K+)", "Large Dimensions (1024+)", "Matryoshka Support", "FP16 Quantization", "BERT-based", "Binary Support"], "type": "bar"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 255, 0.8)", "bordercolor": "gray", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(0, 0, 0, 0.5)", "size": 28}, "showarrow": false, "text": "<b>Through Year: 2024</b>", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.05, "yanchor": "bottom", "yref": "paper"}]}, "name": "2024"}, {"data": [{"hovertemplate": "%{hovertext}<extra></extra>", "hovertext": ["<b>Long Context (8K+)</b><br>Total models: 5<br>First adopted: 2025<br>Years active: 2025-2025<br><br>Recent models:<br>\u2022 Qwen3 (8B)<br>\u2022 Qwen3 (4B Q4)<br>\u2022 Qwen3 (4B)<br>\u2022 Qwen3 (6B FP16)<br>\u2022 Qwen3 (6B)", "<b>Large Dimensions (1024+)</b><br>Total models: 9<br>First adopted: 2024<br>Years active: 2024-2025<br><br>Recent models:<br>\u2022 Qwen3 (8B)<br>\u2022 Qwen3 (4B Q4)<br>\u2022 Qwen3 (4B)<br>\u2022 Qwen3 (6B FP16)<br>\u2022 Qwen3 (6B)", "<b>BERT-based</b><br>Total models: 9<br>First adopted: 2021<br>Years active: 2021-2025<br><br>Recent models:<br>\u2022 Granite (278M FP16)<br>\u2022 MxBai<br>\u2022 Nomic Embed Text V1.5 (137M)<br>\u2022 Snowflake Arctic (568M)<br>\u2022 Bge M3 (567M)", "<b>FP16 Quantization</b><br>Total models: 10<br>First adopted: 2021<br>Years active: 2021-2025<br><br>Recent models:<br>\u2022 MxBai<br>\u2022 Snowflake Arctic (568M)<br>\u2022 Bge M3 (567M)<br>\u2022 Qwen3 (6B FP16)<br>\u2022 Embeddinggemma 300M Bf16 (300M)", "<b>Matryoshka Support</b><br>Total models: 13<br>First adopted: 2024<br>Years active: 2024-2025<br><br>Recent models:<br>\u2022 Qwen3 (6B FP16)<br>\u2022 Qwen3 (6B)<br>\u2022 Embeddinggemma 300M Qat Q4 (300M Q4)<br>\u2022 Embeddinggemma 300M Qat Q8 (300M)<br>\u2022 Embeddinggemma 300M Bf16 (300M)", "<b>Binary Support</b><br>Total models: 19<br>First adopted: 2021<br>Years active: 2021-2025<br><br>Recent models:<br>\u2022 Qwen3 (6B FP16)<br>\u2022 Qwen3 (6B)<br>\u2022 Embeddinggemma 300M Qat Q4 (300M Q4)<br>\u2022 Embeddinggemma 300M Qat Q8 (300M)<br>\u2022 Embeddinggemma 300M Bf16 (300M)"], "marker": {"color": ["rgba(214, 39, 40, 1.0)", "rgba(140, 86, 75, 1.0)", "rgba(44, 160, 44, 1.0)", "rgba(255, 127, 14, 1.0)", "rgba(148, 103, 189, 1.0)", "rgba(255, 127, 14, 1.0)"], "line": {"color": "white", "width": 2}}, "orientation": "h", "showlegend": false, "text": ["5", "9", "9", "10", "13", "19"], "textfont": {"color": "black", "size": 11}, "textposition": "outside", "uid": "racing_bars", "x": [5, 9, 9, 10, 13, 19], "y": ["Long Context (8K+)", "Large Dimensions (1024+)", "BERT-based", "FP16 Quantization", "Matryoshka Support", "Binary Support"], "type": "bar"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 255, 0.8)", "bordercolor": "gray", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(0, 0, 0, 0.5)", "size": 28}, "showarrow": false, "text": "<b>Through Year: 2025</b>", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.05, "yanchor": "bottom", "yref": "paper"}]}, "name": "2025"}, {"data": [{"hovertemplate": "%{hovertext}<extra></extra>", "hovertext": ["<b>Matryoshka Support</b><br>Year: 2021<br>Models in this year: 0<br><br>", "<b>Large Dimensions (1024+)</b><br>Year: 2021<br>Models in this year: 0<br><br>", "<b>Long Context (8K+)</b><br>Year: 2021<br>Models in this year: 0<br><br>", "<b>Binary Support</b><br>Year: 2021<br>Models in this year: 2<br><br>\u2022 All-MiniLM (22M)<br>\u2022 All-MiniLM (33M)", "<b>FP16 Quantization</b><br>Year: 2021<br>Models in this year: 2<br><br>\u2022 All-MiniLM (22M)<br>\u2022 All-MiniLM (33M)", "<b>BERT-based</b><br>Year: 2021<br>Models in this year: 2<br><br>\u2022 All-MiniLM (22M)<br>\u2022 All-MiniLM (33M)"], "marker": {"color": ["rgba(148, 103, 189, 0.8)", "rgba(140, 86, 75, 0.8)", "rgba(214, 39, 40, 0.8)", "rgba(255, 127, 14, 0.8)", "rgba(255, 127, 14, 0.8)", "rgba(44, 160, 44, 0.8)"], "line": {"color": "orange", "width": 2}}, "orientation": "h", "showlegend": false, "text": ["0", "0", "0", "2", "2", "2"], "textfont": {"color": "black", "size": 11}, "textposition": "outside", "uid": "racing_bars", "x": [0, 0, 0, 2, 2, 2], "y": ["Matryoshka Support", "Large Dimensions (1024+)", "Long Context (8K+)", "Binary Support", "FP16 Quantization", "BERT-based"], "type": "bar"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 200, 0.9)", "bordercolor": "orange", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(255, 100, 0, 0.6)", "size": 28}, "showarrow": false, "text": "<b>Year: 2021 ONLY</b>", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.05, "yanchor": "bottom", "yref": "paper"}]}, "name": "single_2021"}, {"data": [{"hovertemplate": "%{hovertext}<extra></extra>", "hovertext": ["<b>Matryoshka Support</b><br>Year: 2023<br>Models in this year: 0<br><br>", "<b>Long Context (8K+)</b><br>Year: 2023<br>Models in this year: 0<br><br>", "<b>Binary Support</b><br>Year: 2023<br>Models in this year: 1<br><br>\u2022 Bge Large (335M)", "<b>FP16 Quantization</b><br>Year: 2023<br>Models in this year: 1<br><br>\u2022 Bge Large (335M)", "<b>Large Dimensions (1024+)</b><br>Year: 2023<br>Models in this year: 1<br><br>\u2022 Bge Large (335M)", "<b>BERT-based</b><br>Year: 2023<br>Models in this year: 1<br><br>\u2022 Bge Large (335M)"], "marker": {"color": ["rgba(148, 103, 189, 0.8)", "rgba(214, 39, 40, 0.8)", "rgba(255, 127, 14, 0.8)", "rgba(255, 127, 14, 0.8)", "rgba(140, 86, 75, 0.8)", "rgba(44, 160, 44, 0.8)"], "line": {"color": "orange", "width": 2}}, "orientation": "h", "showlegend": false, "text": ["0", "0", "1", "1", "1", "1"], "textfont": {"color": "black", "size": 11}, "textposition": "outside", "uid": "racing_bars", "x": [0, 0, 1, 1, 1, 1], "y": ["Matryoshka Support", "Long Context (8K+)", "Binary Support", "FP16 Quantization", "Large Dimensions (1024+)", "BERT-based"], "type": "bar"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 200, 0.9)", "bordercolor": "orange", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(255, 100, 0, 0.6)", "size": 28}, "showarrow": false, "text": "<b>Year: 2023 ONLY</b>", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.05, "yanchor": "bottom", "yref": "paper"}]}, "name": "single_2023"}, {"data": [{"hovertemplate": "%{hovertext}<extra></extra>", "hovertext": ["<b>Long Context (8K+)</b><br>Year: 2024<br>Models in this year: 2<br><br>\u2022 Snowflake Arctic (568M)<br>\u2022 Bge M3 (567M)", "<b>Large Dimensions (1024+)</b><br>Year: 2024<br>Models in this year: 4<br><br>\u2022 Snowflake Arctic (335M)<br>\u2022 MxBai<br>\u2022 Snowflake Arctic (568M)<br>\u2022 Bge M3 (567M)", "<b>Matryoshka Support</b><br>Year: 2024<br>Models in this year: 5<br><br>\u2022 Snowflake Arctic (110M)<br>\u2022 Snowflake Arctic (335M)<br>\u2022 MxBai<br>\u2022 Nomic Embed Text V1.5 (137M)<br>\u2022 Snowflake Arctic (568M)", "<b>FP16 Quantization</b><br>Year: 2024<br>Models in this year: 5<br><br>\u2022 Granite (30M FP16)<br>\u2022 Granite (278M FP16)<br>\u2022 MxBai<br>\u2022 Snowflake Arctic (568M)<br>\u2022 Bge M3 (567M)", "<b>BERT-based</b><br>Year: 2024<br>Models in this year: 6<br><br>\u2022 Granite (30M FP16)<br>\u2022 Granite (278M FP16)<br>\u2022 MxBai<br>\u2022 Nomic Embed Text V1.5 (137M)<br>\u2022 Snowflake Arctic (568M)<br>\u2022 Bge M3 (567M)", "<b>Binary Support</b><br>Year: 2024<br>Models in this year: 8<br><br>\u2022 Snowflake Arctic (22M)<br>\u2022 Snowflake Arctic (110M)<br>\u2022 Snowflake Arctic (137M)<br>\u2022 Snowflake Arctic (335M)<br>\u2022 MxBai<br>\u2022 Nomic Embed Text V1.5 (137M)<br>\u2022 Snowflake Arctic (568M)<br>\u2022 Bge M3 (567M)"], "marker": {"color": ["rgba(214, 39, 40, 0.8)", "rgba(140, 86, 75, 0.8)", "rgba(148, 103, 189, 0.8)", "rgba(255, 127, 14, 0.8)", "rgba(44, 160, 44, 0.8)", "rgba(255, 127, 14, 0.8)"], "line": {"color": "orange", "width": 2}}, "orientation": "h", "showlegend": false, "text": ["2", "4", "5", "5", "6", "8"], "textfont": {"color": "black", "size": 11}, "textposition": "outside", "uid": "racing_bars", "x": [2, 4, 5, 5, 6, 8], "y": ["Long Context (8K+)", "Large Dimensions (1024+)", "Matryoshka Support", "FP16 Quantization", "BERT-based", "Binary Support"], "type": "bar"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 200, 0.9)", "bordercolor": "orange", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(255, 100, 0, 0.6)", "size": 28}, "showarrow": false, "text": "<b>Year: 2024 ONLY</b>", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.05, "yanchor": "bottom", "yref": "paper"}]}, "name": "single_2024"}, {"data": [{"hovertemplate": "%{hovertext}<extra></extra>", "hovertext": ["<b>BERT-based</b><br>Year: 2025<br>Models in this year: 0<br><br>", "<b>FP16 Quantization</b><br>Year: 2025<br>Models in this year: 2<br><br>\u2022 Qwen3 (6B FP16)<br>\u2022 Embeddinggemma 300M Bf16 (300M)", "<b>Large Dimensions (1024+)</b><br>Year: 2025<br>Models in this year: 5<br><br>\u2022 Qwen3 (8B)<br>\u2022 Qwen3 (4B Q4)<br>\u2022 Qwen3 (4B)<br>\u2022 Qwen3 (6B FP16)<br>\u2022 Qwen3 (6B)", "<b>Long Context (8K+)</b><br>Year: 2025<br>Models in this year: 5<br><br>\u2022 Qwen3 (8B)<br>\u2022 Qwen3 (4B Q4)<br>\u2022 Qwen3 (4B)<br>\u2022 Qwen3 (6B FP16)<br>\u2022 Qwen3 (6B)", "<b>Binary Support</b><br>Year: 2025<br>Models in this year: 8<br><br>\u2022 Qwen3 (8B)<br>\u2022 Qwen3 (4B Q4)<br>\u2022 Qwen3 (4B)<br>\u2022 Qwen3 (6B FP16)<br>\u2022 Qwen3 (6B)<br>\u2022 Embeddinggemma 300M Qat Q4 (300M Q4)<br>\u2022 Embeddinggemma 300M Qat Q8 (300M)<br>\u2022 Embeddinggemma 300M Bf16 (300M)", "<b>Matryoshka Support</b><br>Year: 2025<br>Models in this year: 8<br><br>\u2022 Qwen3 (8B)<br>\u2022 Qwen3 (4B Q4)<br>\u2022 Qwen3 (4B)<br>\u2022 Qwen3 (6B FP16)<br>\u2022 Qwen3 (6B)<br>\u2022 Embeddinggemma 300M Qat Q4 (300M Q4)<br>\u2022 Embeddinggemma 300M Qat Q8 (300M)<br>\u2022 Embeddinggemma 300M Bf16 (300M)"], "marker": {"color": ["rgba(44, 160, 44, 0.8)", "rgba(255, 127, 14, 0.8)", "rgba(140, 86, 75, 0.8)", "rgba(214, 39, 40, 0.8)", "rgba(255, 127, 14, 0.8)", "rgba(148, 103, 189, 0.8)"], "line": {"color": "orange", "width": 2}}, "orientation": "h", "showlegend": false, "text": ["0", "2", "5", "5", "8", "8"], "textfont": {"color": "black", "size": 11}, "textposition": "outside", "uid": "racing_bars", "x": [0, 2, 5, 5, 8, 8], "y": ["BERT-based", "FP16 Quantization", "Large Dimensions (1024+)", "Long Context (8K+)", "Binary Support", "Matryoshka Support"], "type": "bar"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 200, 0.9)", "bordercolor": "orange", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(255, 100, 0, 0.6)", "size": 28}, "showarrow": false, "text": "<b>Year: 2025 ONLY</b>", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.05, "yanchor": "bottom", "yref": "paper"}]}, "name": "single_2025"}]};
+        var config = {"displayModeBar": true, "displaylogo": false, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "toImageButtonOptions": {"format": "png", "filename": "rag_benchmark_chart", "height": 800, "width": 1200, "scale": 2}};
+
+        console.log('technology data loaded successfully');
+
+        // Render the chart
+        Plotly.newPlot('chart-technology', figData.data, figData.layout, config)
+            .then(function() {
+                console.log('technology rendered successfully');
+
+                // Apply frames if present (for animation)
+                if (figData.frames && figData.frames.length > 0) {
+                    Plotly.addFrames('chart-technology', figData.frames);
+                    console.log('technology animation frames added');
+                }
+            })
+            .catch(function(err) {
+                console.error('technology rendering error:', err);
+            });
+    } catch(err) {
+        console.error('technology initialization error:', err);
+    }
+})();
+
+        
+(function() {
+    console.log('Initializing efficiency chart...');
+
+    try {
+        var figData = {"data": [{"customdata": [["BAAI (Beijing Academy of Artificial Intelligence)", "335M", "RoBERTa-based encoder with RetroMAE pretraining", "FP32, FP16, BF16, ONNX", 1340.0, 191.73134328358208, 64.23, 54.29, 2023, 64.23, 335.0], ["BAAI (Beijing Academy of Artificial Intelligence)", "567M", "XLM-RoBERTa-based with RetroMAE, extended to 8192 tokens", "FP32, FP16, BF16, GGUF (F16, Q8_0)", 2268.0, 105.0440917107584, 59.56, 48.8, 2024, 59.56, 567.0], ["Nomic AI", "137M", "Modified BERT-base with RoPE, SwiGLU, Flash Attention", "F32, F16, GGUF (Q2_K to Q8_0)", 548.0, 454.5985401459854, 62.28, "N/A", 2024, 62.28, 137.0], ["Mixedbread AI (Berlin)", "335M", "BERT-large (24 layers, 16 attention heads)", "float32, float16, int8, uint8, binary, ubinary", 1340.0, 193.07462686567166, 64.68, 54.39, 2024, 64.68, 335.0], ["Snowflake Inc.", "22M", "Optimized MiniLM-L6 variant", "F16", 88.0, 2421.818181818182, 53.28, 50.15, 2024, 53.28, 22.0], ["Snowflake Inc.", "110M", "E5-base-unsupervised variant", "F16", 440.0, 499.09090909090907, 54.9, 53.91, 2024, 54.9, 110.0], ["Snowflake Inc.", "137M", "Nomic-embed-text-unsupervised with RPE", "F16", 548.0, 400.21897810218974, 54.83, 53.91, 2024, 54.83, 137.0], ["Snowflake Inc.", "335M", "E5-large-unsupervised variant", "F16", 1340.0, 167.10447761194027, 55.98, 55.98, 2024, 55.98, 335.0], ["Snowflake Inc.", "568M", "XLM-RoBERTa Large with RetroMAE pretraining", "FP16, INT8, INT4", 2272.0, 97.88732394366198, 55.6, 55.6, 2024, 55.6, 568.0], ["IBM Research / IBM Granite Team", "30M", "RoBERTa-like (6 layers, 384 hidden size)", "fp16", 120.0, 1883.3333333333335, 56.5, 49.1, 2024, 56.5, 30.0], ["IBM Research / IBM Granite Team", "278M", "XLM-RoBERTa-like (12 layers, 768 hidden size)", "fp16", 1112.0, 209.7122302158273, 58.3, 49.5, 2024, 58.3, 278.0], ["Qwen Team, Alibaba Cloud / DAMO Academy", "8B", "Qwen3 dual-encoder with MRL", "Q4_K_M, Q5_K_M, Q6_K, Q8_0, F16", 32000.0, 8.8225, 70.58, "N/A", 2025, 70.58, 8000.0], ["Qwen Team, Alibaba Cloud / DAMO Academy", "4B", "Qwen3 dual-encoder with MRL", "q4_K_M (4-bit K-quant medium)", 16000.0, 17.3625, 69.45, "N/A", 2025, 69.45, 4000.0], ["Qwen Team, Alibaba Cloud / DAMO Academy", "4B", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", "Q8_0 (8-bit linear)", 16000.0, 17.3625, 69.45, "N/A", 2025, 69.45, 4000.0], ["Qwen Team, Alibaba Cloud / DAMO Academy", "600M", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", "FP16", 2400.0, 107.21666666666667, 64.33, "N/A", 2025, 64.33, 600.0], ["Qwen Team, Alibaba Cloud / DAMO Academy", "600M", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", "Q8_0 (8-bit linear)", 2400.0, 106.66666666666667, 64.0, "N/A", 2025, 64.0, 600.0], ["Google DeepMind", "300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", "Q4_0 with Quantization-Aware Training", 1200.0, 202.06666666666666, 60.62, "N/A", 2025, 60.62, 300.0], ["Google DeepMind", "300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", "Q8_0 with Quantization-Aware Training", 1200.0, 203.1, 60.93, "N/A", 2025, 60.93, 300.0], ["Google DeepMind", "300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", "BFloat16 (baseline)", 1200.0, 203.83333333333334, 61.15, "N/A", 2025, 61.15, 300.0]], "hovertemplate": "<b>%{text}</b><br>Developer: %{customdata[0]}<br>Parameters: %{customdata[1]} (%{x:.1f}M)<br>Performance: %{y:.2f}<br>Architecture: %{customdata[2]}<br>Quantization: %{customdata[3]}<br>Memory: %{customdata[4]:.1f} MB<br>Efficiency: %{customdata[5]:.2f}<br>MTEB: %{customdata[6]}<br>BEIR: %{customdata[7]}<br><extra></extra>", "marker": {"color": [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2], "colorbar": {"tickmode": "array", "ticktext": ["2023", "2024", "2025"], "tickvals": [0, 1, 2], "title": {"text": "Year"}}, "colorscale": [[0.0, "#440154"], [0.1111111111111111, "#482878"], [0.2222222222222222, "#3e4989"], [0.3333333333333333, "#31688e"], [0.4444444444444444, "#26828e"], [0.5555555555555556, "#1f9e89"], [0.6666666666666666, "#35b779"], [0.7777777777777778, "#6ece58"], [0.8888888888888888, "#b5de2b"], [1.0, "#fde725"]], "line": {"color": "white", "width": 2}, "opacity": 0.7, "showscale": true, "size": [45.52525758037769, 48.267716602650424, 40.865366701812434, 45.52525758037769, 31.333792065802022, 39.72143211783425, 40.865366701812434, 45.52525758037769, 48.27689992446778, 32.950174952571494, 44.553257446952465, 62.061799739838875, 58.4494397918711, 58.4494397918711, 48.56253490053927, 48.56253490053927, 44.950174952571494, 44.950174952571494, 44.950174952571494], "sizemode": "diameter"}, "mode": "markers", "name": "Models", "text": ["Bge Large (335M)", "Bge M3 (567M)", "Nomic Embed Text V1.5 (137M)", "MxBai", "Snowflake Arctic (22M)", "Snowflake Arctic (110M)", "Snowflake Arctic (137M)", "Snowflake Arctic (335M)", "Snowflake Arctic (568M)", "Granite (30M FP16)", "Granite (278M FP16)", "Qwen3 (8B)", "Qwen3 (4B Q4)", "Qwen3 (4B)", "Qwen3 (6B FP16)", "Qwen3 (6B)", "Embeddinggemma 300M Qat Q4 (300M Q4)", "Embeddinggemma 300M Qat Q8 (300M)", "Embeddinggemma 300M Bf16 (300M)"], "uid": "efficiency_models", "x": [335.0, 567.0, 137.0, 335.0, 22.0, 110.0, 137.0, 335.0, 568.0, 30.0, 278.0, 8000.0, 4000.0, 4000.0, 600.0, 600.0, 300.0, 300.0, 300.0], "y": [64.23, 59.56, 62.28, 64.68, 53.28, 54.9, 54.83, 55.98, 55.6, 56.5, 58.3, 70.58, 69.45, 69.45, 64.33, 64.0, 60.62, 60.93, 61.15], "type": "scatter"}, {"hoverinfo": "skip", "line": {"color": "red", "dash": "dash", "width": 3}, "mode": "lines", "name": "Efficiency Frontier", "showlegend": true, "uid": "efficiency_frontier", "x": [22.0, 30.0, 137.0, 335.0, 335.0, 4000.0, 8000.0], "y": [53.28, 56.5, 62.28, 64.23, 64.68, 69.45, 70.58], "type": "scatter"}], "layout": {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "title": {"font": {"size": 24}, "text": "Efficiency Evolution: Performance vs Parameters", "x": 0.5, "xanchor": "center"}, "legend": {"orientation": "v", "yanchor": "bottom", "y": 0.01, "xanchor": "left", "x": 0.01, "bgcolor": "rgba(255, 255, 255, 0.95)", "bordercolor": "gray", "borderwidth": 1}, "xaxis": {"title": {"text": "Parameters (Millions)"}, "type": "log", "showgrid": true, "gridwidth": 1, "gridcolor": "lightgray", "range": [1.2143893155137193, 4.031123352300431]}, "yaxis": {"title": {"text": "Performance Score"}, "showgrid": true, "gridwidth": 1, "gridcolor": "lightgray", "tickformat": ".2f", "range": [52.415, 71.445]}, "height": 700, "autosize": true, "hovermode": "closest", "showlegend": true, "annotations": [{"font": {"color": "gray", "size": 11}, "showarrow": false, "text": "Bubble size represents memory footprint (log scale) \u2022 Red line shows efficiency frontier", "x": 0.5, "xanchor": "center", "xref": "paper", "y": -0.15, "yref": "paper"}], "margin": {"l": 80, "r": 100, "t": 140, "b": 100}, "updatemenus": [{"bgcolor": "lightyellow", "bordercolor": "gray", "borderwidth": 2, "buttons": [{"args": [["2023", "2024", "2025"], {"frame": {"duration": 1000, "redraw": true}, "mode": "afterall", "fromcurrent": false, "transition": {"duration": 600, "easing": "cubic-in-out"}}], "label": "\u25b6 Play", "method": "animate"}, {"args": [[null], {"frame": {"duration": 0, "redraw": false}, "mode": "immediate", "transition": {"duration": 0}}], "label": "\u23f8 Pause", "method": "animate"}, {"args": [["2023"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "\u23ee Reset", "method": "animate"}, {"args": [["2023", "2024", "2025"], {"frame": {"duration": 1800, "redraw": true}, "mode": "afterall", "fromcurrent": false, "transition": {"duration": 900, "easing": "cubic-in-out"}}], "label": "\ud83d\udc22 Slow", "method": "animate"}, {"args": [["2023", "2024", "2025"], {"frame": {"duration": 500, "redraw": true}, "mode": "afterall", "fromcurrent": false, "transition": {"duration": 200, "easing": "linear"}}], "label": "\ud83d\udc07 Fast", "method": "animate"}], "direction": "left", "pad": {"r": 10, "t": 10}, "showactive": true, "type": "buttons", "x": 0.1, "xanchor": "left", "y": 1.12, "yanchor": "top"}], "sliders": [{"active": 2, "currentvalue": {"prefix": "Year: ", "visible": true, "xanchor": "right"}, "len": 0.85, "pad": {"b": 10, "t": 50}, "steps": [{"args": [["single_2023"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "2023", "method": "animate"}, {"args": [["single_2024"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "2024", "method": "animate"}, {"args": [["single_2025"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "2025", "method": "animate"}], "transition": {"duration": 300, "easing": "cubic-in-out"}, "x": 0.1, "xanchor": "left", "y": 0, "yanchor": "top"}]}, "frames": [{"data": [{"customdata": [["BAAI (Beijing Academy of Artificial Intelligence)", "335M", "RoBERTa-based encoder with RetroMAE pretraining", "FP32, FP16, BF16, ONNX", 1340.0, 191.73134328358208, 64.23, 54.29, 2023, 64.23, 335.0]], "hovertemplate": "<b>%{text}</b><br>Developer: %{customdata[0]}<br>Parameters: %{customdata[1]} (%{x:.1f}M)<br>Performance: %{y:.2f}<br>Architecture: %{customdata[2]}<br>Quantization: %{customdata[3]}<br>Memory: %{customdata[4]:.1f} MB<br>Efficiency: %{customdata[5]:.2f}<br>MTEB: %{customdata[6]}<br>BEIR: %{customdata[7]}<br><extra></extra>", "marker": {"color": [0], "colorbar": {"tickmode": "array", "ticktext": ["2023", "2024", "2025"], "tickvals": [0, 1, 2], "title": {"text": "Year"}}, "colorscale": [[0.0, "#440154"], [0.1111111111111111, "#482878"], [0.2222222222222222, "#3e4989"], [0.3333333333333333, "#31688e"], [0.4444444444444444, "#26828e"], [0.5555555555555556, "#1f9e89"], [0.6666666666666666, "#35b779"], [0.7777777777777778, "#6ece58"], [0.8888888888888888, "#b5de2b"], [1.0, "#fde725"]], "line": {"color": "white", "width": 2}, "opacity": 0.7, "showscale": true, "size": [45.52525758037769], "sizemode": "diameter"}, "mode": "markers", "name": "Models", "text": ["Bge Large (335M)"], "uid": "efficiency_models", "x": [335.0], "y": [64.23], "type": "scatter"}, {"hoverinfo": "skip", "line": {"color": "red", "dash": "dash", "width": 3}, "mode": "lines", "name": "Efficiency Frontier", "uid": "efficiency_frontier", "x": [335.0], "y": [64.23], "type": "scatter"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 255, 0.8)", "bordercolor": "gray", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(0, 0, 0, 0.5)", "size": 28}, "showarrow": false, "text": "<b>Year: 2023</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"color": "gray", "size": 11}, "showarrow": false, "text": "Bubble size represents memory footprint (log scale) \u2022 Red line shows efficiency frontier", "x": 0.5, "xanchor": "center", "xref": "paper", "y": -0.15, "yref": "paper"}]}, "name": "2023"}, {"data": [{"customdata": [["BAAI (Beijing Academy of Artificial Intelligence)", "335M", "RoBERTa-based encoder with RetroMAE pretraining", "FP32, FP16, BF16, ONNX", 1340.0, 191.73134328358208, 64.23, 54.29, 2023, 64.23, 335.0], ["BAAI (Beijing Academy of Artificial Intelligence)", "567M", "XLM-RoBERTa-based with RetroMAE, extended to 8192 tokens", "FP32, FP16, BF16, GGUF (F16, Q8_0)", 2268.0, 105.0440917107584, 59.56, 48.8, 2024, 59.56, 567.0], ["Nomic AI", "137M", "Modified BERT-base with RoPE, SwiGLU, Flash Attention", "F32, F16, GGUF (Q2_K to Q8_0)", 548.0, 454.5985401459854, 62.28, "N/A", 2024, 62.28, 137.0], ["Mixedbread AI (Berlin)", "335M", "BERT-large (24 layers, 16 attention heads)", "float32, float16, int8, uint8, binary, ubinary", 1340.0, 193.07462686567166, 64.68, 54.39, 2024, 64.68, 335.0], ["Snowflake Inc.", "22M", "Optimized MiniLM-L6 variant", "F16", 88.0, 2421.818181818182, 53.28, 50.15, 2024, 53.28, 22.0], ["Snowflake Inc.", "110M", "E5-base-unsupervised variant", "F16", 440.0, 499.09090909090907, 54.9, 53.91, 2024, 54.9, 110.0], ["Snowflake Inc.", "137M", "Nomic-embed-text-unsupervised with RPE", "F16", 548.0, 400.21897810218974, 54.83, 53.91, 2024, 54.83, 137.0], ["Snowflake Inc.", "335M", "E5-large-unsupervised variant", "F16", 1340.0, 167.10447761194027, 55.98, 55.98, 2024, 55.98, 335.0], ["Snowflake Inc.", "568M", "XLM-RoBERTa Large with RetroMAE pretraining", "FP16, INT8, INT4", 2272.0, 97.88732394366198, 55.6, 55.6, 2024, 55.6, 568.0], ["IBM Research / IBM Granite Team", "30M", "RoBERTa-like (6 layers, 384 hidden size)", "fp16", 120.0, 1883.3333333333335, 56.5, 49.1, 2024, 56.5, 30.0], ["IBM Research / IBM Granite Team", "278M", "XLM-RoBERTa-like (12 layers, 768 hidden size)", "fp16", 1112.0, 209.7122302158273, 58.3, 49.5, 2024, 58.3, 278.0]], "hovertemplate": "<b>%{text}</b><br>Developer: %{customdata[0]}<br>Parameters: %{customdata[1]} (%{x:.1f}M)<br>Performance: %{y:.2f}<br>Architecture: %{customdata[2]}<br>Quantization: %{customdata[3]}<br>Memory: %{customdata[4]:.1f} MB<br>Efficiency: %{customdata[5]:.2f}<br>MTEB: %{customdata[6]}<br>BEIR: %{customdata[7]}<br><extra></extra>", "marker": {"color": [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], "colorbar": {"tickmode": "array", "ticktext": ["2023", "2024", "2025"], "tickvals": [0, 1, 2], "title": {"text": "Year"}}, "colorscale": [[0.0, "#440154"], [0.1111111111111111, "#482878"], [0.2222222222222222, "#3e4989"], [0.3333333333333333, "#31688e"], [0.4444444444444444, "#26828e"], [0.5555555555555556, "#1f9e89"], [0.6666666666666666, "#35b779"], [0.7777777777777778, "#6ece58"], [0.8888888888888888, "#b5de2b"], [1.0, "#fde725"]], "line": {"color": "white", "width": 2}, "opacity": 0.7, "showscale": true, "size": [45.52525758037769, 48.267716602650424, 40.865366701812434, 45.52525758037769, 31.333792065802022, 39.72143211783425, 40.865366701812434, 45.52525758037769, 48.27689992446778, 32.950174952571494, 44.553257446952465], "sizemode": "diameter"}, "mode": "markers", "name": "Models", "text": ["Bge Large (335M)", "Bge M3 (567M)", "Nomic Embed Text V1.5 (137M)", "MxBai", "Snowflake Arctic (22M)", "Snowflake Arctic (110M)", "Snowflake Arctic (137M)", "Snowflake Arctic (335M)", "Snowflake Arctic (568M)", "Granite (30M FP16)", "Granite (278M FP16)"], "uid": "efficiency_models", "x": [335.0, 567.0, 137.0, 335.0, 22.0, 110.0, 137.0, 335.0, 568.0, 30.0, 278.0], "y": [64.23, 59.56, 62.28, 64.68, 53.28, 54.9, 54.83, 55.98, 55.6, 56.5, 58.3], "type": "scatter"}, {"hoverinfo": "skip", "line": {"color": "red", "dash": "dash", "width": 3}, "mode": "lines", "name": "Efficiency Frontier", "uid": "efficiency_frontier", "x": [22.0, 30.0, 137.0, 335.0, 335.0], "y": [53.28, 56.5, 62.28, 64.23, 64.68], "type": "scatter"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 255, 0.8)", "bordercolor": "gray", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(0, 0, 0, 0.5)", "size": 28}, "showarrow": false, "text": "<b>Year: 2024</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"color": "gray", "size": 11}, "showarrow": false, "text": "Bubble size represents memory footprint (log scale) \u2022 Red line shows efficiency frontier", "x": 0.5, "xanchor": "center", "xref": "paper", "y": -0.15, "yref": "paper"}]}, "name": "2024"}, {"data": [{"customdata": [["BAAI (Beijing Academy of Artificial Intelligence)", "335M", "RoBERTa-based encoder with RetroMAE pretraining", "FP32, FP16, BF16, ONNX", 1340.0, 191.73134328358208, 64.23, 54.29, 2023, 64.23, 335.0], ["BAAI (Beijing Academy of Artificial Intelligence)", "567M", "XLM-RoBERTa-based with RetroMAE, extended to 8192 tokens", "FP32, FP16, BF16, GGUF (F16, Q8_0)", 2268.0, 105.0440917107584, 59.56, 48.8, 2024, 59.56, 567.0], ["Nomic AI", "137M", "Modified BERT-base with RoPE, SwiGLU, Flash Attention", "F32, F16, GGUF (Q2_K to Q8_0)", 548.0, 454.5985401459854, 62.28, "N/A", 2024, 62.28, 137.0], ["Mixedbread AI (Berlin)", "335M", "BERT-large (24 layers, 16 attention heads)", "float32, float16, int8, uint8, binary, ubinary", 1340.0, 193.07462686567166, 64.68, 54.39, 2024, 64.68, 335.0], ["Snowflake Inc.", "22M", "Optimized MiniLM-L6 variant", "F16", 88.0, 2421.818181818182, 53.28, 50.15, 2024, 53.28, 22.0], ["Snowflake Inc.", "110M", "E5-base-unsupervised variant", "F16", 440.0, 499.09090909090907, 54.9, 53.91, 2024, 54.9, 110.0], ["Snowflake Inc.", "137M", "Nomic-embed-text-unsupervised with RPE", "F16", 548.0, 400.21897810218974, 54.83, 53.91, 2024, 54.83, 137.0], ["Snowflake Inc.", "335M", "E5-large-unsupervised variant", "F16", 1340.0, 167.10447761194027, 55.98, 55.98, 2024, 55.98, 335.0], ["Snowflake Inc.", "568M", "XLM-RoBERTa Large with RetroMAE pretraining", "FP16, INT8, INT4", 2272.0, 97.88732394366198, 55.6, 55.6, 2024, 55.6, 568.0], ["IBM Research / IBM Granite Team", "30M", "RoBERTa-like (6 layers, 384 hidden size)", "fp16", 120.0, 1883.3333333333335, 56.5, 49.1, 2024, 56.5, 30.0], ["IBM Research / IBM Granite Team", "278M", "XLM-RoBERTa-like (12 layers, 768 hidden size)", "fp16", 1112.0, 209.7122302158273, 58.3, 49.5, 2024, 58.3, 278.0], ["Qwen Team, Alibaba Cloud / DAMO Academy", "8B", "Qwen3 dual-encoder with MRL", "Q4_K_M, Q5_K_M, Q6_K, Q8_0, F16", 32000.0, 8.8225, 70.58, "N/A", 2025, 70.58, 8000.0], ["Qwen Team, Alibaba Cloud / DAMO Academy", "4B", "Qwen3 dual-encoder with MRL", "q4_K_M (4-bit K-quant medium)", 16000.0, 17.3625, 69.45, "N/A", 2025, 69.45, 4000.0], ["Qwen Team, Alibaba Cloud / DAMO Academy", "4B", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", "Q8_0 (8-bit linear)", 16000.0, 17.3625, 69.45, "N/A", 2025, 69.45, 4000.0], ["Qwen Team, Alibaba Cloud / DAMO Academy", "600M", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", "FP16", 2400.0, 107.21666666666667, 64.33, "N/A", 2025, 64.33, 600.0], ["Qwen Team, Alibaba Cloud / DAMO Academy", "600M", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", "Q8_0 (8-bit linear)", 2400.0, 106.66666666666667, 64.0, "N/A", 2025, 64.0, 600.0], ["Google DeepMind", "300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", "Q4_0 with Quantization-Aware Training", 1200.0, 202.06666666666666, 60.62, "N/A", 2025, 60.62, 300.0], ["Google DeepMind", "300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", "Q8_0 with Quantization-Aware Training", 1200.0, 203.1, 60.93, "N/A", 2025, 60.93, 300.0], ["Google DeepMind", "300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", "BFloat16 (baseline)", 1200.0, 203.83333333333334, 61.15, "N/A", 2025, 61.15, 300.0]], "hovertemplate": "<b>%{text}</b><br>Developer: %{customdata[0]}<br>Parameters: %{customdata[1]} (%{x:.1f}M)<br>Performance: %{y:.2f}<br>Architecture: %{customdata[2]}<br>Quantization: %{customdata[3]}<br>Memory: %{customdata[4]:.1f} MB<br>Efficiency: %{customdata[5]:.2f}<br>MTEB: %{customdata[6]}<br>BEIR: %{customdata[7]}<br><extra></extra>", "marker": {"color": [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2], "colorbar": {"tickmode": "array", "ticktext": ["2023", "2024", "2025"], "tickvals": [0, 1, 2], "title": {"text": "Year"}}, "colorscale": [[0.0, "#440154"], [0.1111111111111111, "#482878"], [0.2222222222222222, "#3e4989"], [0.3333333333333333, "#31688e"], [0.4444444444444444, "#26828e"], [0.5555555555555556, "#1f9e89"], [0.6666666666666666, "#35b779"], [0.7777777777777778, "#6ece58"], [0.8888888888888888, "#b5de2b"], [1.0, "#fde725"]], "line": {"color": "white", "width": 2}, "opacity": 0.7, "showscale": true, "size": [45.52525758037769, 48.267716602650424, 40.865366701812434, 45.52525758037769, 31.333792065802022, 39.72143211783425, 40.865366701812434, 45.52525758037769, 48.27689992446778, 32.950174952571494, 44.553257446952465, 62.061799739838875, 58.4494397918711, 58.4494397918711, 48.56253490053927, 48.56253490053927, 44.950174952571494, 44.950174952571494, 44.950174952571494], "sizemode": "diameter"}, "mode": "markers", "name": "Models", "text": ["Bge Large (335M)", "Bge M3 (567M)", "Nomic Embed Text V1.5 (137M)", "MxBai", "Snowflake Arctic (22M)", "Snowflake Arctic (110M)", "Snowflake Arctic (137M)", "Snowflake Arctic (335M)", "Snowflake Arctic (568M)", "Granite (30M FP16)", "Granite (278M FP16)", "Qwen3 (8B)", "Qwen3 (4B Q4)", "Qwen3 (4B)", "Qwen3 (6B FP16)", "Qwen3 (6B)", "Embeddinggemma 300M Qat Q4 (300M Q4)", "Embeddinggemma 300M Qat Q8 (300M)", "Embeddinggemma 300M Bf16 (300M)"], "uid": "efficiency_models", "x": [335.0, 567.0, 137.0, 335.0, 22.0, 110.0, 137.0, 335.0, 568.0, 30.0, 278.0, 8000.0, 4000.0, 4000.0, 600.0, 600.0, 300.0, 300.0, 300.0], "y": [64.23, 59.56, 62.28, 64.68, 53.28, 54.9, 54.83, 55.98, 55.6, 56.5, 58.3, 70.58, 69.45, 69.45, 64.33, 64.0, 60.62, 60.93, 61.15], "type": "scatter"}, {"hoverinfo": "skip", "line": {"color": "red", "dash": "dash", "width": 3}, "mode": "lines", "name": "Efficiency Frontier", "uid": "efficiency_frontier", "x": [22.0, 30.0, 137.0, 335.0, 335.0, 4000.0, 8000.0], "y": [53.28, 56.5, 62.28, 64.23, 64.68, 69.45, 70.58], "type": "scatter"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 255, 0.8)", "bordercolor": "gray", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(0, 0, 0, 0.5)", "size": 28}, "showarrow": false, "text": "<b>Year: 2025</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"color": "gray", "size": 11}, "showarrow": false, "text": "Bubble size represents memory footprint (log scale) \u2022 Red line shows efficiency frontier", "x": 0.5, "xanchor": "center", "xref": "paper", "y": -0.15, "yref": "paper"}]}, "name": "2025"}, {"data": [{"customdata": [["BAAI (Beijing Academy of Artificial Intelligence)", "335M", "RoBERTa-based encoder with RetroMAE pretraining", "FP32, FP16, BF16, ONNX", 1340.0, 191.73134328358208, 64.23, 54.29, 2023, 64.23, 335.0]], "hovertemplate": "<b>%{text}</b><br>Developer: %{customdata[0]}<br>Parameters: %{customdata[1]} (%{x:.1f}M)<br>Performance: %{y:.2f}<br>Architecture: %{customdata[2]}<br>Quantization: %{customdata[3]}<br>Memory: %{customdata[4]:.1f} MB<br>Efficiency: %{customdata[5]:.2f}<br>MTEB: %{customdata[6]}<br>BEIR: %{customdata[7]}<br><extra></extra>", "marker": {"color": [0], "colorbar": {"tickmode": "array", "ticktext": ["2023", "2024", "2025"], "tickvals": [0, 1, 2], "title": {"text": "Year"}}, "colorscale": [[0.0, "#440154"], [0.1111111111111111, "#482878"], [0.2222222222222222, "#3e4989"], [0.3333333333333333, "#31688e"], [0.4444444444444444, "#26828e"], [0.5555555555555556, "#1f9e89"], [0.6666666666666666, "#35b779"], [0.7777777777777778, "#6ece58"], [0.8888888888888888, "#b5de2b"], [1.0, "#fde725"]], "line": {"color": "white", "width": 2}, "opacity": 0.7, "showscale": true, "size": [45.52525758037769], "sizemode": "diameter"}, "mode": "markers", "name": "Models 2023", "text": ["Bge Large (335M)"], "uid": "efficiency_models", "x": [335.0], "y": [64.23], "type": "scatter"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 200, 0.9)", "bordercolor": "orange", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(255, 100, 0, 0.6)", "size": 28}, "showarrow": false, "text": "<b>Year: 2023 ONLY</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"color": "gray", "size": 11}, "showarrow": false, "text": "Bubble size represents memory footprint (log scale)", "x": 0.5, "xanchor": "center", "xref": "paper", "y": -0.15, "yref": "paper"}]}, "name": "single_2023"}, {"data": [{"customdata": [["BAAI (Beijing Academy of Artificial Intelligence)", "567M", "XLM-RoBERTa-based with RetroMAE, extended to 8192 tokens", "FP32, FP16, BF16, GGUF (F16, Q8_0)", 2268.0, 105.0440917107584, 59.56, 48.8, 2024, 59.56, 567.0], ["Nomic AI", "137M", "Modified BERT-base with RoPE, SwiGLU, Flash Attention", "F32, F16, GGUF (Q2_K to Q8_0)", 548.0, 454.5985401459854, 62.28, "N/A", 2024, 62.28, 137.0], ["Mixedbread AI (Berlin)", "335M", "BERT-large (24 layers, 16 attention heads)", "float32, float16, int8, uint8, binary, ubinary", 1340.0, 193.07462686567166, 64.68, 54.39, 2024, 64.68, 335.0], ["Snowflake Inc.", "22M", "Optimized MiniLM-L6 variant", "F16", 88.0, 2421.818181818182, 53.28, 50.15, 2024, 53.28, 22.0], ["Snowflake Inc.", "110M", "E5-base-unsupervised variant", "F16", 440.0, 499.09090909090907, 54.9, 53.91, 2024, 54.9, 110.0], ["Snowflake Inc.", "137M", "Nomic-embed-text-unsupervised with RPE", "F16", 548.0, 400.21897810218974, 54.83, 53.91, 2024, 54.83, 137.0], ["Snowflake Inc.", "335M", "E5-large-unsupervised variant", "F16", 1340.0, 167.10447761194027, 55.98, 55.98, 2024, 55.98, 335.0], ["Snowflake Inc.", "568M", "XLM-RoBERTa Large with RetroMAE pretraining", "FP16, INT8, INT4", 2272.0, 97.88732394366198, 55.6, 55.6, 2024, 55.6, 568.0], ["IBM Research / IBM Granite Team", "30M", "RoBERTa-like (6 layers, 384 hidden size)", "fp16", 120.0, 1883.3333333333335, 56.5, 49.1, 2024, 56.5, 30.0], ["IBM Research / IBM Granite Team", "278M", "XLM-RoBERTa-like (12 layers, 768 hidden size)", "fp16", 1112.0, 209.7122302158273, 58.3, 49.5, 2024, 58.3, 278.0]], "hovertemplate": "<b>%{text}</b><br>Developer: %{customdata[0]}<br>Parameters: %{customdata[1]} (%{x:.1f}M)<br>Performance: %{y:.2f}<br>Architecture: %{customdata[2]}<br>Quantization: %{customdata[3]}<br>Memory: %{customdata[4]:.1f} MB<br>Efficiency: %{customdata[5]:.2f}<br>MTEB: %{customdata[6]}<br>BEIR: %{customdata[7]}<br><extra></extra>", "marker": {"color": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], "colorbar": {"tickmode": "array", "ticktext": ["2023", "2024", "2025"], "tickvals": [0, 1, 2], "title": {"text": "Year"}}, "colorscale": [[0.0, "#440154"], [0.1111111111111111, "#482878"], [0.2222222222222222, "#3e4989"], [0.3333333333333333, "#31688e"], [0.4444444444444444, "#26828e"], [0.5555555555555556, "#1f9e89"], [0.6666666666666666, "#35b779"], [0.7777777777777778, "#6ece58"], [0.8888888888888888, "#b5de2b"], [1.0, "#fde725"]], "line": {"color": "white", "width": 2}, "opacity": 0.7, "showscale": true, "size": [48.267716602650424, 40.865366701812434, 45.52525758037769, 31.333792065802022, 39.72143211783425, 40.865366701812434, 45.52525758037769, 48.27689992446778, 32.950174952571494, 44.553257446952465], "sizemode": "diameter"}, "mode": "markers", "name": "Models 2024", "text": ["Bge M3 (567M)", "Nomic Embed Text V1.5 (137M)", "MxBai", "Snowflake Arctic (22M)", "Snowflake Arctic (110M)", "Snowflake Arctic (137M)", "Snowflake Arctic (335M)", "Snowflake Arctic (568M)", "Granite (30M FP16)", "Granite (278M FP16)"], "uid": "efficiency_models", "x": [567.0, 137.0, 335.0, 22.0, 110.0, 137.0, 335.0, 568.0, 30.0, 278.0], "y": [59.56, 62.28, 64.68, 53.28, 54.9, 54.83, 55.98, 55.6, 56.5, 58.3], "type": "scatter"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 200, 0.9)", "bordercolor": "orange", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(255, 100, 0, 0.6)", "size": 28}, "showarrow": false, "text": "<b>Year: 2024 ONLY</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"color": "gray", "size": 11}, "showarrow": false, "text": "Bubble size represents memory footprint (log scale)", "x": 0.5, "xanchor": "center", "xref": "paper", "y": -0.15, "yref": "paper"}]}, "name": "single_2024"}, {"data": [{"customdata": [["Qwen Team, Alibaba Cloud / DAMO Academy", "8B", "Qwen3 dual-encoder with MRL", "Q4_K_M, Q5_K_M, Q6_K, Q8_0, F16", 32000.0, 8.8225, 70.58, "N/A", 2025, 70.58, 8000.0], ["Qwen Team, Alibaba Cloud / DAMO Academy", "4B", "Qwen3 dual-encoder with MRL", "q4_K_M (4-bit K-quant medium)", 16000.0, 17.3625, 69.45, "N/A", 2025, 69.45, 4000.0], ["Qwen Team, Alibaba Cloud / DAMO Academy", "4B", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", "Q8_0 (8-bit linear)", 16000.0, 17.3625, 69.45, "N/A", 2025, 69.45, 4000.0], ["Qwen Team, Alibaba Cloud / DAMO Academy", "600M", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", "FP16", 2400.0, 107.21666666666667, 64.33, "N/A", 2025, 64.33, 600.0], ["Qwen Team, Alibaba Cloud / DAMO Academy", "600M", "Qwen3 decoder-only dual-encoder with causal attention, LoRA fine-tuned, GQA", "Q8_0 (8-bit linear)", 2400.0, 106.66666666666667, 64.0, "N/A", 2025, 64.0, 600.0], ["Google DeepMind", "300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", "Q4_0 with Quantization-Aware Training", 1200.0, 202.06666666666666, 60.62, "N/A", 2025, 60.62, 300.0], ["Google DeepMind", "300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", "Q8_0 with Quantization-Aware Training", 1200.0, 203.1, 60.93, "N/A", 2025, 60.93, 300.0], ["Google DeepMind", "300M", "Gemma3TextModel encoder-only with bidirectional attention, T5Gemma initialization", "BFloat16 (baseline)", 1200.0, 203.83333333333334, 61.15, "N/A", 2025, 61.15, 300.0]], "hovertemplate": "<b>%{text}</b><br>Developer: %{customdata[0]}<br>Parameters: %{customdata[1]} (%{x:.1f}M)<br>Performance: %{y:.2f}<br>Architecture: %{customdata[2]}<br>Quantization: %{customdata[3]}<br>Memory: %{customdata[4]:.1f} MB<br>Efficiency: %{customdata[5]:.2f}<br>MTEB: %{customdata[6]}<br>BEIR: %{customdata[7]}<br><extra></extra>", "marker": {"color": [2, 2, 2, 2, 2, 2, 2, 2], "colorbar": {"tickmode": "array", "ticktext": ["2023", "2024", "2025"], "tickvals": [0, 1, 2], "title": {"text": "Year"}}, "colorscale": [[0.0, "#440154"], [0.1111111111111111, "#482878"], [0.2222222222222222, "#3e4989"], [0.3333333333333333, "#31688e"], [0.4444444444444444, "#26828e"], [0.5555555555555556, "#1f9e89"], [0.6666666666666666, "#35b779"], [0.7777777777777778, "#6ece58"], [0.8888888888888888, "#b5de2b"], [1.0, "#fde725"]], "line": {"color": "white", "width": 2}, "opacity": 0.7, "showscale": true, "size": [62.061799739838875, 58.4494397918711, 58.4494397918711, 48.56253490053927, 48.56253490053927, 44.950174952571494, 44.950174952571494, 44.950174952571494], "sizemode": "diameter"}, "mode": "markers", "name": "Models 2025", "text": ["Qwen3 (8B)", "Qwen3 (4B Q4)", "Qwen3 (4B)", "Qwen3 (6B FP16)", "Qwen3 (6B)", "Embeddinggemma 300M Qat Q4 (300M Q4)", "Embeddinggemma 300M Qat Q8 (300M)", "Embeddinggemma 300M Bf16 (300M)"], "uid": "efficiency_models", "x": [8000.0, 4000.0, 4000.0, 600.0, 600.0, 300.0, 300.0, 300.0], "y": [70.58, 69.45, 69.45, 64.33, 64.0, 60.62, 60.93, 61.15], "type": "scatter"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 200, 0.9)", "bordercolor": "orange", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(255, 100, 0, 0.6)", "size": 28}, "showarrow": false, "text": "<b>Year: 2025 ONLY</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"color": "gray", "size": 11}, "showarrow": false, "text": "Bubble size represents memory footprint (log scale)", "x": 0.5, "xanchor": "center", "xref": "paper", "y": -0.15, "yref": "paper"}]}, "name": "single_2025"}]};
+        var config = {"displayModeBar": true, "displaylogo": false, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "toImageButtonOptions": {"format": "png", "filename": "rag_benchmark_chart", "height": 800, "width": 1200, "scale": 2}};
+
+        console.log('efficiency data loaded successfully');
+
+        // Render the chart
+        Plotly.newPlot('chart-efficiency', figData.data, figData.layout, config)
+            .then(function() {
+                console.log('efficiency rendered successfully');
+
+                // Apply frames if present (for animation)
+                if (figData.frames && figData.frames.length > 0) {
+                    Plotly.addFrames('chart-efficiency', figData.frames);
+                    console.log('efficiency animation frames added');
+                }
+            })
+            .catch(function(err) {
+                console.error('efficiency rendering error:', err);
+            });
+    } catch(err) {
+        console.error('efficiency initialization error:', err);
+    }
+})();
+
+        
+(function() {
+    console.log('Initializing innovation chart...');
+
+    try {
+        var figData = {"data": [{"hovertemplate": "<b>%{y}</b><br>Models Released: %{x}<br><extra></extra>", "marker": {"color": ["#7f7f7f", "#7f7f7f", "#7f7f7f", "#7f7f7f", "#7f7f7f", "#7f7f7f", "#2ca02c", "#7f7f7f"]}, "name": "Developer Models", "orientation": "h", "text": ["5", "5", "3", "2", "2", "2", "1", "1"], "textposition": "outside", "x": [5, 5, 3, 2, 2, 2, 1, 1], "y": ["Snowflake Inc.", "Qwen Team, Alibaba Cloud / DAMO Academy", "Google DeepMind", "UKPLab (sentence-transformers)", "BAAI (Beijing Academy of Artificial Intelligence)", "IBM Research / IBM Granite Team", "Nomic AI", "Mixedbread AI (Berlin)"], "type": "bar", "xaxis": "x", "yaxis": "y"}, {"hovertemplate": "<b>%{y}</b><br>Models Released: %{x}<br><extra></extra>", "marker": {"color": ["#1f77b4", "#ff7f0e", "#2ca02c"]}, "name": "Country Models", "orientation": "h", "text": ["11", "7", "3"], "textposition": "outside", "x": [11, 7, 3], "y": ["USA", "China", "Germany"], "type": "bar", "xaxis": "x2", "yaxis": "y2"}], "layout": {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "xaxis": {"anchor": "y", "domain": [0.0, 1.0], "title": {"text": "Cumulative Model Count"}, "showgrid": true}, "yaxis": {"anchor": "x", "domain": [0.575, 1.0], "title": {"text": "Developer"}}, "xaxis2": {"anchor": "y2", "domain": [0.0, 1.0], "title": {"text": "Cumulative Model Count"}, "showgrid": true}, "yaxis2": {"anchor": "x2", "domain": [0.0, 0.425], "title": {"text": "Country"}}, "annotations": [{"font": {"size": 16}, "showarrow": false, "text": "Developer Innovation Race", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.0, "yanchor": "bottom", "yref": "paper"}, {"font": {"size": 16}, "showarrow": false, "text": "Geographic Innovation Patterns", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 0.425, "yanchor": "bottom", "yref": "paper"}], "title": {"font": {"size": 24}, "text": "Innovation Race: Developer & Geographic Leadership (2021-2025)", "x": 0.5, "xanchor": "center"}, "height": 900, "autosize": true, "showlegend": false, "margin": {"l": 150, "r": 80, "t": 140, "b": 100}, "updatemenus": [{"bgcolor": "lightcoral", "bordercolor": "gray", "borderwidth": 2, "buttons": [{"args": [["2021", "2023", "2024", "2025"], {"frame": {"duration": 1200, "redraw": true}, "mode": "afterall", "fromcurrent": false, "transition": {"duration": 700, "easing": "cubic-in-out"}}], "label": "\u25b6 Play", "method": "animate"}, {"args": [[null], {"frame": {"duration": 0, "redraw": false}, "mode": "immediate", "transition": {"duration": 0}}], "label": "\u23f8 Pause", "method": "animate"}, {"args": [["2021"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "\u23ee Reset", "method": "animate"}, {"args": [["2021", "2023", "2024", "2025"], {"frame": {"duration": 2000, "redraw": true}, "mode": "afterall", "fromcurrent": false, "transition": {"duration": 1000, "easing": "cubic-in-out"}}], "label": "\ud83d\udc22 Slow", "method": "animate"}, {"args": [["2021", "2023", "2024", "2025"], {"frame": {"duration": 600, "redraw": true}, "mode": "afterall", "fromcurrent": false, "transition": {"duration": 250, "easing": "linear"}}], "label": "\ud83d\udc07 Fast", "method": "animate"}], "direction": "left", "pad": {"r": 10, "t": 10}, "showactive": true, "type": "buttons", "x": 0.1, "xanchor": "left", "y": 1.12, "yanchor": "top"}], "sliders": [{"active": 3, "currentvalue": {"prefix": "Year: ", "visible": true, "xanchor": "right"}, "len": 0.85, "pad": {"b": 10, "t": 50}, "steps": [{"args": [["single_2021"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "2021", "method": "animate"}, {"args": [["single_2023"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "2023", "method": "animate"}, {"args": [["single_2024"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "2024", "method": "animate"}, {"args": [["single_2025"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate", "transition": {"duration": 0}}], "label": "2025", "method": "animate"}], "transition": {"duration": 300, "easing": "cubic-in-out"}, "x": 0.1, "xanchor": "left", "y": 0, "yanchor": "top"}]}, "frames": [{"data": [{"hovertemplate": "<b>%{y}</b><br>Models Released: %{x}<br><extra></extra>", "marker": {"color": ["#7f7f7f"]}, "orientation": "h", "text": ["2"], "textposition": "outside", "x": [2], "y": ["UKPLab (sentence-transformers)"], "type": "bar"}, {"hovertemplate": "<b>%{y}</b><br>Models Released: %{x}<br><extra></extra>", "marker": {"color": ["#2ca02c"]}, "orientation": "h", "text": ["2"], "textposition": "outside", "x": [2], "y": ["Germany"], "type": "bar"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 255, 0.8)", "bordercolor": "gray", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(0, 0, 0, 0.5)", "size": 28}, "showarrow": false, "text": "<b>Year: 2021</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"size": 14}, "showarrow": false, "text": "Developer Innovation Race - Through Year: 2021", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.0, "yanchor": "bottom", "yref": "paper"}, {"font": {"size": 14}, "showarrow": false, "text": "Geographic Innovation Patterns - Through Year: 2021", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 0.42, "yanchor": "bottom", "yref": "paper"}]}, "name": "2021"}, {"data": [{"hovertemplate": "<b>%{y}</b><br>Models Released: %{x}<br><extra></extra>", "marker": {"color": ["#7f7f7f", "#7f7f7f"]}, "orientation": "h", "text": ["2", "1"], "textposition": "outside", "x": [2, 1], "y": ["UKPLab (sentence-transformers)", "BAAI (Beijing Academy of Artificial Intelligence)"], "type": "bar"}, {"hovertemplate": "<b>%{y}</b><br>Models Released: %{x}<br><extra></extra>", "marker": {"color": ["#2ca02c", "#ff7f0e"]}, "orientation": "h", "text": ["2", "1"], "textposition": "outside", "x": [2, 1], "y": ["Germany", "China"], "type": "bar"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 255, 0.8)", "bordercolor": "gray", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(0, 0, 0, 0.5)", "size": 28}, "showarrow": false, "text": "<b>Year: 2023</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"size": 14}, "showarrow": false, "text": "Developer Innovation Race - Through Year: 2023", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.0, "yanchor": "bottom", "yref": "paper"}, {"font": {"size": 14}, "showarrow": false, "text": "Geographic Innovation Patterns - Through Year: 2023", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 0.42, "yanchor": "bottom", "yref": "paper"}]}, "name": "2023"}, {"data": [{"hovertemplate": "<b>%{y}</b><br>Models Released: %{x}<br><extra></extra>", "marker": {"color": ["#7f7f7f", "#7f7f7f", "#7f7f7f", "#7f7f7f", "#2ca02c", "#7f7f7f"]}, "orientation": "h", "text": ["5", "2", "2", "2", "1", "1"], "textposition": "outside", "x": [5, 2, 2, 2, 1, 1], "y": ["Snowflake Inc.", "UKPLab (sentence-transformers)", "BAAI (Beijing Academy of Artificial Intelligence)", "IBM Research / IBM Granite Team", "Nomic AI", "Mixedbread AI (Berlin)"], "type": "bar"}, {"hovertemplate": "<b>%{y}</b><br>Models Released: %{x}<br><extra></extra>", "marker": {"color": ["#1f77b4", "#2ca02c", "#ff7f0e"]}, "orientation": "h", "text": ["8", "3", "2"], "textposition": "outside", "x": [8, 3, 2], "y": ["USA", "Germany", "China"], "type": "bar"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 255, 0.8)", "bordercolor": "gray", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(0, 0, 0, 0.5)", "size": 28}, "showarrow": false, "text": "<b>Year: 2024</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"size": 14}, "showarrow": false, "text": "Developer Innovation Race - Through Year: 2024", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.0, "yanchor": "bottom", "yref": "paper"}, {"font": {"size": 14}, "showarrow": false, "text": "Geographic Innovation Patterns - Through Year: 2024", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 0.42, "yanchor": "bottom", "yref": "paper"}]}, "name": "2024"}, {"data": [{"hovertemplate": "<b>%{y}</b><br>Models Released: %{x}<br><extra></extra>", "marker": {"color": ["#7f7f7f", "#7f7f7f", "#7f7f7f", "#7f7f7f", "#7f7f7f", "#7f7f7f", "#2ca02c", "#7f7f7f"]}, "orientation": "h", "text": ["5", "5", "3", "2", "2", "2", "1", "1"], "textposition": "outside", "x": [5, 5, 3, 2, 2, 2, 1, 1], "y": ["Snowflake Inc.", "Qwen Team, Alibaba Cloud / DAMO Academy", "Google DeepMind", "UKPLab (sentence-transformers)", "BAAI (Beijing Academy of Artificial Intelligence)", "IBM Research / IBM Granite Team", "Nomic AI", "Mixedbread AI (Berlin)"], "type": "bar"}, {"hovertemplate": "<b>%{y}</b><br>Models Released: %{x}<br><extra></extra>", "marker": {"color": ["#1f77b4", "#ff7f0e", "#2ca02c"]}, "orientation": "h", "text": ["11", "7", "3"], "textposition": "outside", "x": [11, 7, 3], "y": ["USA", "China", "Germany"], "type": "bar"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 255, 0.8)", "bordercolor": "gray", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(0, 0, 0, 0.5)", "size": 28}, "showarrow": false, "text": "<b>Year: 2025</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"size": 14}, "showarrow": false, "text": "Developer Innovation Race - Through Year: 2025", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.0, "yanchor": "bottom", "yref": "paper"}, {"font": {"size": 14}, "showarrow": false, "text": "Geographic Innovation Patterns - Through Year: 2025", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 0.42, "yanchor": "bottom", "yref": "paper"}]}, "name": "2025"}, {"data": [{"hovertemplate": "<b>%{y}</b><br>Models Released in 2021: %{x}<br><extra></extra>", "marker": {"color": ["#7f7f7f"]}, "orientation": "h", "text": ["2"], "textposition": "outside", "x": [2], "y": ["UKPLab (sentence-transformers)"], "type": "bar"}, {"hovertemplate": "<b>%{y}</b><br>Models Released in 2021: %{x}<br><extra></extra>", "marker": {"color": ["#2ca02c"]}, "orientation": "h", "text": ["2"], "textposition": "outside", "x": [2], "y": ["Germany"], "type": "bar"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 200, 0.9)", "bordercolor": "orange", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(255, 100, 0, 0.6)", "size": 28}, "showarrow": false, "text": "<b>Year: 2021 ONLY</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"size": 14}, "showarrow": false, "text": "Developer Innovation Race - Year: 2021 Only", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.0, "yanchor": "bottom", "yref": "paper"}, {"font": {"size": 14}, "showarrow": false, "text": "Geographic Innovation Patterns - Year: 2021 Only", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 0.42, "yanchor": "bottom", "yref": "paper"}]}, "name": "single_2021"}, {"data": [{"hovertemplate": "<b>%{y}</b><br>Models Released in 2023: %{x}<br><extra></extra>", "marker": {"color": ["#7f7f7f"]}, "orientation": "h", "text": ["1"], "textposition": "outside", "x": [1], "y": ["BAAI (Beijing Academy of Artificial Intelligence)"], "type": "bar"}, {"hovertemplate": "<b>%{y}</b><br>Models Released in 2023: %{x}<br><extra></extra>", "marker": {"color": ["#ff7f0e"]}, "orientation": "h", "text": ["1"], "textposition": "outside", "x": [1], "y": ["China"], "type": "bar"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 200, 0.9)", "bordercolor": "orange", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(255, 100, 0, 0.6)", "size": 28}, "showarrow": false, "text": "<b>Year: 2023 ONLY</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"size": 14}, "showarrow": false, "text": "Developer Innovation Race - Year: 2023 Only", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.0, "yanchor": "bottom", "yref": "paper"}, {"font": {"size": 14}, "showarrow": false, "text": "Geographic Innovation Patterns - Year: 2023 Only", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 0.42, "yanchor": "bottom", "yref": "paper"}]}, "name": "single_2023"}, {"data": [{"hovertemplate": "<b>%{y}</b><br>Models Released in 2024: %{x}<br><extra></extra>", "marker": {"color": ["#7f7f7f", "#7f7f7f", "#7f7f7f", "#2ca02c", "#7f7f7f"]}, "orientation": "h", "text": ["5", "2", "1", "1", "1"], "textposition": "outside", "x": [5, 2, 1, 1, 1], "y": ["Snowflake Inc.", "IBM Research / IBM Granite Team", "Mixedbread AI (Berlin)", "Nomic AI", "BAAI (Beijing Academy of Artificial Intelligence)"], "type": "bar"}, {"hovertemplate": "<b>%{y}</b><br>Models Released in 2024: %{x}<br><extra></extra>", "marker": {"color": ["#1f77b4", "#2ca02c", "#ff7f0e"]}, "orientation": "h", "text": ["8", "1", "1"], "textposition": "outside", "x": [8, 1, 1], "y": ["USA", "Germany", "China"], "type": "bar"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 200, 0.9)", "bordercolor": "orange", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(255, 100, 0, 0.6)", "size": 28}, "showarrow": false, "text": "<b>Year: 2024 ONLY</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"size": 14}, "showarrow": false, "text": "Developer Innovation Race - Year: 2024 Only", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.0, "yanchor": "bottom", "yref": "paper"}, {"font": {"size": 14}, "showarrow": false, "text": "Geographic Innovation Patterns - Year: 2024 Only", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 0.42, "yanchor": "bottom", "yref": "paper"}]}, "name": "single_2024"}, {"data": [{"hovertemplate": "<b>%{y}</b><br>Models Released in 2025: %{x}<br><extra></extra>", "marker": {"color": ["#7f7f7f", "#7f7f7f"]}, "orientation": "h", "text": ["5", "3"], "textposition": "outside", "x": [5, 3], "y": ["Qwen Team, Alibaba Cloud / DAMO Academy", "Google DeepMind"], "type": "bar"}, {"hovertemplate": "<b>%{y}</b><br>Models Released in 2025: %{x}<br><extra></extra>", "marker": {"color": ["#ff7f0e", "#1f77b4"]}, "orientation": "h", "text": ["5", "3"], "textposition": "outside", "x": [5, 3], "y": ["China", "USA"], "type": "bar"}], "layout": {"annotations": [{"bgcolor": "rgba(255, 255, 200, 0.9)", "bordercolor": "orange", "borderpad": 10, "borderwidth": 2, "font": {"color": "rgba(255, 100, 0, 0.6)", "size": 28}, "showarrow": false, "text": "<b>Year: 2025 ONLY</b>", "x": 0.02, "xanchor": "left", "xref": "paper", "y": 0.98, "yanchor": "top", "yref": "paper"}, {"font": {"size": 14}, "showarrow": false, "text": "Developer Innovation Race - Year: 2025 Only", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 1.0, "yanchor": "bottom", "yref": "paper"}, {"font": {"size": 14}, "showarrow": false, "text": "Geographic Innovation Patterns - Year: 2025 Only", "x": 0.5, "xanchor": "center", "xref": "paper", "y": 0.42, "yanchor": "bottom", "yref": "paper"}]}, "name": "single_2025"}]};
+        var config = {"displayModeBar": true, "displaylogo": false, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "toImageButtonOptions": {"format": "png", "filename": "rag_benchmark_chart", "height": 800, "width": 1200, "scale": 2}};
+
+        console.log('innovation data loaded successfully');
+
+        // Render the chart
+        Plotly.newPlot('chart-innovation', figData.data, figData.layout, config)
+            .then(function() {
+                console.log('innovation rendered successfully');
+
+                // Apply frames if present (for animation)
+                if (figData.frames && figData.frames.length > 0) {
+                    Plotly.addFrames('chart-innovation', figData.frames);
+                    console.log('innovation animation frames added');
+                }
+            })
+            .catch(function(err) {
+                console.error('innovation rendering error:', err);
+            });
+    } catch(err) {
+        console.error('innovation initialization error:', err);
+    }
+})();
+
+
+        // Navigation & Scroll Tracking
+        const mainContent = document.getElementById('main-content');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        // Smooth scroll to sections
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId) || document.getElementById(targetId + '-section');
+
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                    // Update active state
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Track scroll position and update active nav link
+        const observerOptions = {
+            root: mainContent,
+            rootMargin: '-100px 0px -70% 0px',
+            threshold: 0
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const chartName = entry.target.dataset.chart;
+
+                    // Update navigation
+                    navLinks.forEach(link => {
+                        if (link.dataset.section === chartName) {
+                            navLinks.forEach(l => l.classList.remove('active'));
+                            link.classList.add('active');
+                        }
+                    });
+
+                    // Update progress indicator
+                    const progressItem = document.querySelector(`.progress-item[data-chart="${chartName}"]`);
+                    if (progressItem) {
+                        progressItem.classList.add('viewed');
+                    }
+                }
+            });
+        }, observerOptions);
+
+        // Observe all chart sections
+        document.querySelectorAll('.chart-section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // Collapsible Insights
+        function toggleInsights() {
+            const content = document.getElementById('insights-content');
+            const toggle = document.getElementById('insights-toggle');
+
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                toggle.classList.remove('collapsed');
+                toggle.textContent = '▼';
+            } else {
+                content.classList.add('collapsed');
+                toggle.classList.add('collapsed');
+                toggle.textContent = '▶';
+            }
+        }
+
+        // Filter Functions
+        function updateYearSelection() {
+            const selectedYear = document.getElementById('year-select').value;
+            const hint = document.getElementById('year-mode-hint');
+
+            // Always show single year only
+            hint.textContent = `Showing only models from ${selectedYear}`;
+
+            // Apply the year filter
+            applyFilters();
+        }
+
+        function updatePerfThreshold() {
+            const threshold = document.getElementById('perf-threshold').value;
+            document.getElementById('perf-threshold-display').textContent = threshold;
+            applyFilters();
+        }
+
+        function getSelectedTechnologies() {
+            const techSelect = document.getElementById('tech-filter');
+            const selected = Array.from(techSelect.selectedOptions).map(opt => opt.value);
+            return selected;
+        }
+
+        function applyFilters() {
+            const selectedYear = document.getElementById('year-select').value;
+            const developer = document.getElementById('developer-filter').value;
+            const perfThreshold = document.getElementById('perf-threshold').value;
+            const technologies = getSelectedTechnologies();
+
+            console.log('Filters applied:', {
+                year: selectedYear,
+                developer: developer,
+                perfThreshold: perfThreshold,
+                technologies: technologies
+            });
+
+            // Always use single-year frames: "single_2023" format
+            const frameName = `single_${selectedYear}`;
+
+            // Navigate all charts to selected year (single-year mode only)
+            const chartIds = ['chart-performance', 'chart-efficiency', 'chart-innovation'];
+
+            chartIds.forEach(chartId => {
+                const chartDiv = document.getElementById(chartId);
+                if (chartDiv && chartDiv.layout) {
+                    // Jump to the single-year frame
+                    Plotly.animate(chartId, [frameName], {
+                        frame: {duration: 0, redraw: true},
+                        transition: {duration: 0},
+                        mode: 'immediate'
+                    }).catch(err => {
+                        console.log(`Frame ${frameName} not found for ${chartId}`);
+                    });
+                }
+            });
+
+            // Technology chart
+            const techChartDiv = document.getElementById('chart-technology');
+            if (techChartDiv && techChartDiv.layout) {
+                Plotly.animate('chart-technology', [frameName], {
+                    frame: {duration: 0, redraw: true},
+                    transition: {duration: 0},
+                    mode: 'immediate'
+                }).catch(err => {
+                    console.log(`Frame ${frameName} not found for technology chart`);
+                });
+            }
+
+            // Note: Full filtering by developer/tech/performance would require:
+            // 1. Access to raw model data in JavaScript
+            // 2. Re-rendering charts with filtered data
+            // 3. This is a UI framework that demonstrates the filtering capability
+        }
+
+        // Color mapping functions
+        function getColorForValue(value, min, max, colorScheme = 'performance') {
+            if (value === null || value === undefined || isNaN(value)) {
+                return 'rgba(150, 150, 150, 0.6)'; // Gray for missing data
+            }
+
+            const normalized = Math.max(0, Math.min(1, (value - min) / (max - min || 1)));
+
+            if (colorScheme === 'performance') {
+                // Red (low) -> Yellow -> Green (high)
+                if (normalized < 0.5) {
+                    const t = normalized * 2;
+                    return `rgb(${Math.round(255)}, ${Math.round(100 + t * 155)}, ${Math.round(0)})`;
+                } else {
+                    const t = (normalized - 0.5) * 2;
+                    return `rgb(${Math.round(255 - t * 155)}, ${Math.round(255)}, ${Math.round(t * 100)})`;
+                }
+            } else if (colorScheme === 'year') {
+                // Blue (early) -> Purple (recent)
+                return `rgb(${Math.round(100 + normalized * 155)}, ${Math.round(100 - normalized * 50)}, ${Math.round(200 + normalized * 55)})`;
+            } else if (colorScheme === 'params') {
+                // Light -> Dark based on log scale
+                return `rgb(${Math.round(255 - normalized * 180)}, ${Math.round(200 - normalized * 150)}, ${Math.round(255 - normalized * 100)})`;
+            } else if (colorScheme === 'efficiency') {
+                // Yellow-Green gradient for efficiency
+                return `rgb(${Math.round(255 - normalized * 155)}, ${Math.round(200 + normalized * 55)}, ${Math.round(50)})`;
+            }
+
+            return 'rgb(100, 100, 200)'; // Default
+        }
+
+        function getDeveloperColor(developer) {
+            const colors = {
+                'openai': '#10a37f',
+                'cohere': '#d18ee2',
+                'mistral': '#ff7000',
+                'sentence-transformers': '#ff6b6b',
+                'google': '#4285f4',
+                'baai': '#f4b400',
+                'snowflake': '#29b5e8',
+                'ibm': '#0f62fe',
+                'nomic': '#8b5cf6',
+                'mixedbread': '#f97316'
+            };
+
+            const devLower = (developer || '').toLowerCase();
+            for (const [key, color] of Object.entries(colors)) {
+                if (devLower.includes(key)) return color;
+            }
+            return '#718096'; // Default gray
+        }
+
+        function applyColorScheme() {
+            const colorBy = document.getElementById('color-by').value;
+            console.log('Applying color scheme:', colorBy);
+
+            const chartIds = ['chart-performance', 'chart-efficiency'];
+
+            chartIds.forEach(chartId => {
+                const chartDiv = document.getElementById(chartId);
+                if (!chartDiv || !chartDiv.data) return;
+
+                try {
+                    // Process each trace in the chart
+                    for (let i = 0; i < chartDiv.data.length; i++) {
+                        const trace = chartDiv.data[i];
+                        if (!trace.customdata || trace.type === 'scatter' && trace.mode === 'lines') {
+                            continue; // Skip lines (efficiency frontier, etc.)
+                        }
+
+                        const colors = [];
+                        let minVal = Infinity, maxVal = -Infinity;
+
+                        // First pass: find min/max for normalization
+                        if (colorBy !== 'developer') {
+                            for (let j = 0; j < trace.customdata.length; j++) {
+                                const customdata = trace.customdata[j];
+                                let value;
+
+                                if (colorBy === 'performance') {
+                                    // Performance chart: customdata[10], Efficiency chart: customdata[9]
+                                    value = chartId === 'chart-performance' ? customdata[10] : customdata[9];
+                                } else if (colorBy === 'year') {
+                                    // Performance chart: customdata[8], Efficiency chart: customdata[8]
+                                    value = customdata[8];
+                                } else if (colorBy === 'parameters') {
+                                    // Performance chart: customdata[11], Efficiency chart: customdata[10]
+                                    value = chartId === 'chart-performance' ? customdata[11] : customdata[10];
+                                    value = Math.log10(value + 1); // Log scale
+                                } else if (colorBy === 'efficiency') {
+                                    // Performance chart: customdata[12], Efficiency chart: customdata[5]
+                                    value = chartId === 'chart-performance' ? customdata[12] : customdata[5];
+                                }
+
+                                if (value !== null && value !== undefined && !isNaN(value)) {
+                                    minVal = Math.min(minVal, value);
+                                    maxVal = Math.max(maxVal, value);
+                                }
+                            }
+                        }
+
+                        // Second pass: assign colors
+                        for (let j = 0; j < trace.customdata.length; j++) {
+                            const customdata = trace.customdata[j];
+                            let color;
+
+                            if (colorBy === 'developer') {
+                                // Performance chart: customdata[9], Efficiency chart: customdata[0]
+                                const dev = chartId === 'chart-performance' ? customdata[9] : customdata[0];
+                                color = getDeveloperColor(dev);
+                            } else if (colorBy === 'performance') {
+                                const value = chartId === 'chart-performance' ? customdata[10] : customdata[9];
+                                color = getColorForValue(value, minVal, maxVal, 'performance');
+                            } else if (colorBy === 'year') {
+                                const value = customdata[8];
+                                color = getColorForValue(value, 2021, 2025, 'year');
+                            } else if (colorBy === 'parameters') {
+                                const rawValue = chartId === 'chart-performance' ? customdata[11] : customdata[10];
+                                const value = Math.log10(rawValue + 1);
+                                color = getColorForValue(value, minVal, maxVal, 'params');
+                            } else if (colorBy === 'efficiency') {
+                                const value = chartId === 'chart-performance' ? customdata[12] : customdata[5];
+                                color = getColorForValue(value, minVal, maxVal, 'efficiency');
+                            }
+
+                            colors.push(color);
+                        }
+
+                        // Update the trace colors
+                        Plotly.restyle(chartDiv, {'marker.color': [colors]}, [i]);
+                    }
+
+                    console.log(`Updated colors for ${chartId} based on ${colorBy}`);
+                } catch (error) {
+                    console.error(`Error updating colors for ${chartId}:`, error);
+                }
+            });
+
+            // Technology chart doesn't need color changes (heatmap by count)
+            // Innovation chart handled separately (bar chart structure)
+        }
+
+        function resetAllFilters() {
+            // Reset year to 2025 (most recent)
+            document.getElementById('year-select').value = '2025';
+
+            // Reset color-by to developer
+            document.getElementById('color-by').value = 'developer';
+
+            // Reset developer filter
+            document.getElementById('developer-filter').value = '';
+
+            // Reset performance threshold
+            document.getElementById('perf-threshold').value = 0;
+            document.getElementById('perf-threshold-display').textContent = '0';
+
+            // Clear technology selections
+            const techSelect = document.getElementById('tech-filter');
+            for (let option of techSelect.options) {
+                option.selected = false;
+            }
+
+            // Update hint and apply filters
+            updateYearSelection();
+            applyColorScheme();
+        }
+
+        // Export Functions
+        function exportChartPNG(chartId) {
+            const chartDiv = document.getElementById(chartId);
+            Plotly.downloadImage(chartDiv, {
+                format: 'png',
+                width: 1920,
+                height: 1080,
+                filename: `${chartId}_${new Date().toISOString().split('T')[0]}`
+            });
+        }
+
+        function fullscreenChart(chartId) {
+            const chartDiv = document.getElementById(chartId);
+            if (chartDiv.requestFullscreen) {
+                chartDiv.requestFullscreen();
+            } else if (chartDiv.webkitRequestFullscreen) {
+                chartDiv.webkitRequestFullscreen();
+            } else if (chartDiv.msRequestFullscreen) {
+                chartDiv.msRequestFullscreen();
+            }
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ignore if user is typing in an input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+                return;
+            }
+
+            switch(e.key) {
+                case '1':
+                    document.getElementById('chart-performance-section').scrollIntoView({ behavior: 'smooth' });
+                    break;
+                case '2':
+                    document.getElementById('chart-technology-section').scrollIntoView({ behavior: 'smooth' });
+                    break;
+                case '3':
+                    document.getElementById('chart-efficiency-section').scrollIntoView({ behavior: 'smooth' });
+                    break;
+                case '4':
+                    document.getElementById('chart-innovation-section').scrollIntoView({ behavior: 'smooth' });
+                    break;
+                case 'i':
+                case 'I':
+                    toggleInsights();
+                    break;
+                case 'r':
+                case 'R':
+                    resetAllFilters();
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    mainContent.scrollBy({ top: -200, behavior: 'smooth' });
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    mainContent.scrollBy({ top: 200, behavior: 'smooth' });
+                    break;
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Mark overview as viewed by default
+            document.querySelector('.progress-item[data-chart="overview"]').classList.add('viewed');
+
+            // Apply default year filter and color scheme after charts are loaded
+            // Wait a bit for Plotly charts to fully render
+            setTimeout(() => {
+                try {
+                    // Ensure we're showing single-year mode for 2025 (default)
+                    applyFilters();
+                    applyColorScheme();
+                } catch (error) {
+                    console.log('Initial filters will be applied after charts fully load');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

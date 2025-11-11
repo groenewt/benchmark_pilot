@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geographic Analysis - Embedding Models by Country</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page-layout {
+            display: flex;
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 40px;
+            border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            margin-bottom: 20px;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-2px);
+        }
+
+        .back-link::before {
+            content: "←";
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .description {
+            font-size: 16px;
+            line-height: 1.6;
+            opacity: 0.95;
+            max-width: 1000px;
+        }
+
+        /* Insights Panel */
+        .insights-panel {
+            padding: 30px 40px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .insights-panel h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .insights-content {
+            color: #6c757d;
+            font-size: 15px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        /* Sidebar Filter Panel */
+        .filters-sidebar {
+            width: 320px;
+            background: #f8f9fa;
+            border-right: 2px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transition: width 0.3s ease, margin-left 0.3s ease;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            max-height: calc(100vh - 40px);
+        }
+
+        .filters-sidebar.collapsed {
+            width: 50px;
+        }
+
+        .sidebar-toggle-btn {
+            position: absolute;
+            top: 20px;
+            right: -20px;
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+            z-index: 100;
+        }
+
+        .sidebar-toggle-btn:hover {
+            background: #5568d3;
+            transform: scale(1.1);
+        }
+
+        .filters-sidebar.collapsed .sidebar-toggle-btn {
+            right: -25px;
+        }
+
+        .filters-header {
+            padding: 25px 20px 20px;
+            background: #667eea;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .filters-sidebar.collapsed .filters-header {
+            padding: 25px 10px 20px;
+        }
+
+        .filters-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            white-space: nowrap;
+            transition: opacity 0.2s;
+        }
+
+        .filters-sidebar.collapsed .filters-header h2 {
+            opacity: 0;
+            font-size: 0;
+        }
+
+        .filters-content {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+            transition: opacity 0.2s;
+        }
+
+        .filters-sidebar.collapsed .filters-content {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .filter-group {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .filter-group select,
+        .filter-group input[type="number"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .year-range {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .year-range input {
+            flex: 1;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            min-width: 0;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+        }
+
+        .filters-sidebar.collapsed .filter-actions {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .filter-actions button {
+            flex: 1;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-apply {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-apply:hover {
+            background: #5568d3;
+        }
+
+        .btn-reset {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #5a6268;
+        }
+
+        .filter-status-bar {
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .filters-sidebar.collapsed .filter-status-bar {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .filter-status {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        /* Collapsible Filter Sections */
+        .filter-section {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background: white;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .filter-section-header {
+            padding: 14px 18px;
+            background: #f8f9fa;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #495057;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .filter-section-header:hover {
+            background: #e9ecef;
+        }
+
+        .filter-section-header .toggle-icon {
+            font-size: 12px;
+            transition: transform 0.3s;
+            color: #6c757d;
+        }
+
+        .filter-section.expanded .toggle-icon {
+            transform: rotate(0deg);
+        }
+
+        .filter-section:not(.expanded) .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .filter-section-content {
+            padding: 18px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .filter-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            margin-top: 14px;
+        }
+
+        .filter-label:first-child {
+            margin-top: 0;
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+        }
+
+        /* Range Sliders */
+        .range-slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Improved dual-slider layout for year range */
+        .year-range-dual {
+            gap: 12px;
+        }
+
+        .slider-with-label {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .slider-sublabel {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6c757d;
+            margin-bottom: 4px;
+        }
+
+        .slider-value {
+            align-self: flex-end;
+            font-size: 14px;
+            font-weight: 700;
+            color: #667eea;
+            min-width: 45px;
+            text-align: right;
+        }
+
+        .slider-with-label input[type="range"] {
+            margin: 0;
+        }
+
+        .range-display-summary {
+            text-align: center;
+            font-size: 13px;
+            color: #495057;
+            font-weight: 600;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+
+        .range-display-summary span {
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        .range-slider-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, #667eea 0%, #667eea 50%, #e9ecef 50%, #e9ecef 100%);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .range-slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .range-slider-group input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .range-display {
+            font-size: 13px;
+            color: #667eea;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .checkbox-group-inline {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-group-inline label {
+            font-size: 13px;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .count {
+            color: #6c757d;
+            font-size: 12px;
+        }
+
+        .inline-checkbox {
+            margin-left: 10px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .toggle-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Filter Pills */
+        .filter-pills {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .filter-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .filter-pill .remove {
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .filter-pill .remove:hover {
+            opacity: 1;
+        }
+
+        /* Tab Navigation */
+        .view-tabs {
+            padding: 0 40px;
+            background: white;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.2s;
+            position: relative;
+            top: 2px;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            color: #495057;
+            background: #f8f9fa;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: none;
+        }
+
+        /* Tab Panels */
+        .view-panel {
+            display: none;
+            padding: 40px;
+            background: #fafbfc;
+        }
+
+        .view-panel.active {
+            display: block;
+        }
+
+        .panel-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-container > div {
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* Info Panel */
+        .info-panel {
+            padding: 30px 40px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .info-panel h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .info-panel ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-panel li {
+            padding: 8px 0;
+            color: #6c757d;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info-panel li::before {
+            content: "•";
+            color: #667eea;
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-right: 8px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .filters-sidebar {
+                width: 280px;
+            }
+
+            .chart-container {
+                max-height: 75vh;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .page-layout {
+                flex-direction: column;
+            }
+
+            .filters-sidebar {
+                width: 100%;
+                max-height: none;
+                height: auto;
+                position: relative;
+                border-right: none;
+                border-bottom: 2px solid #e9ecef;
+            }
+
+            .filters-sidebar.collapsed {
+                width: 100%;
+                height: 60px;
+                overflow: hidden;
+            }
+
+            .sidebar-toggle-btn {
+                top: 10px;
+                right: 10px;
+            }
+
+            .filters-sidebar.collapsed .sidebar-toggle-btn {
+                right: 10px;
+            }
+
+            .chart-container {
+                max-height: 70vh;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header, .view-panel, .info-panel, .insights-panel {
+                padding: 20px;
+            }
+
+            .view-tabs {
+                padding: 0 20px;
+            }
+
+            .tab-button {
+                padding: 12px 15px;
+                font-size: 14px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .description {
+                font-size: 14px;
+            }
+
+            .panel-title {
+                font-size: 20px;
+            }
+
+            .chart-container {
+                max-height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="report.html" class="back-link">Back to Full Report</a>
+            <h1>Geographic Analysis: Embedding Models by Country</h1>
+            <p class="description">
+                Comprehensive geographic analysis of embedding model development and performance
+                across countries. Explore how different regions contribute to the embedding model
+                ecosystem, including developer communities, technical specializations, temporal trends,
+                and benchmark performance patterns.
+            </p>
+        </div>
+
+        
+
+        <!-- Main Page Layout: Sidebar + Content -->
+        <div class="page-layout">
+            <!-- Left Sidebar Filter Panel -->
+            <aside class="filters-sidebar" id="filters-sidebar">
+                <button class="sidebar-toggle-btn" id="sidebar-toggle" title="Toggle Filters">
+                    ◀
+                </button>
+
+                <div class="filters-header">
+                    <h2>🔍 Filters</h2>
+                </div>
+
+                <div class="filters-content" id="filters-content">
+
+                <!-- 1. Geographic Filters (Always Expanded) -->
+                <div class="filter-section expanded" id="section-geographic">
+                    <div class="filter-section-header" onclick="toggleFilterSection('geographic')">
+                        <span>📍 Geographic Filters</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="filter-section-content">
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" class="country-filter" value="USA" checked> USA <span class="count">(11)</span></label>
+                            <label><input type="checkbox" class="country-filter" value="China" checked> China <span class="count">(7)</span></label>
+                            <label><input type="checkbox" class="country-filter" value="Germany" checked> Germany <span class="count">(3)</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Temporal Filters (Always Expanded) -->
+                <div class="filter-section expanded" id="section-temporal">
+                    <div class="filter-section-header" onclick="toggleFilterSection('temporal')">
+                        <span>📅 Temporal Filters</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="filter-section-content">
+                        <label class="filter-label">Release Year Range</label>
+                        <div class="range-slider-group year-range-dual">
+                            <div class="slider-with-label">
+                                <label class="slider-sublabel">From Year:</label>
+                                <input type="range" id="year-min-slider" min="2021" max="2025" value="2021" step="1">
+                                <span class="slider-value" id="year-min-display">2021</span>
+                            </div>
+                            <div class="slider-with-label">
+                                <label class="slider-sublabel">To Year:</label>
+                                <input type="range" id="year-max-slider" min="2021" max="2025" value="2025" step="1">
+                                <span class="slider-value" id="year-max-display">2025</span>
+                            </div>
+                            <div class="range-display-summary">
+                                Selected: <span id="year-min-display-2">2021</span> - <span id="year-max-display-2">2025</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Technical Specifications (Collapsed by Default) -->
+                <div class="filter-section" id="section-technical">
+                    <div class="filter-section-header" onclick="toggleFilterSection('technical')">
+                        <span>🔧 Technical Specifications</span>
+                        <span class="toggle-icon">▶</span>
+                    </div>
+                    <div class="filter-section-content" style="display: none;">
+                        <label class="filter-label">Model Size (Parameters)</label>
+                        <select id="filter-size" class="filter-select">
+                            <option value="">All Sizes</option>
+                            <option value="tiny">Tiny (&lt;50M)</option>
+                            <option value="small">Small (50M-200M)</option>
+                            <option value="medium">Medium (200M-1B)</option>
+                            <option value="large">Large (1B-10B)</option>
+                            <option value="xlarge">Extra Large (&gt;10B)</option>
+                        </select>
+
+                        <label class="filter-label">Context Length</label>
+                        <div class="range-slider-group">
+                            <input type="range" id="context-min" min="0" max="50000" value="0" step="512">
+                            <input type="range" id="context-max" min="0" max="50000" value="50000" step="512">
+                            <div class="range-display">
+                                <span id="context-min-display">0</span> - <span id="context-max-display">50000</span> tokens
+                            </div>
+                        </div>
+
+                        <label class="filter-label">Embedding Dimensions</label>
+                        <div class="range-slider-group">
+                            <input type="range" id="dim-min" min="0" max="5000" value="0" step="128">
+                            <input type="range" id="dim-max" min="0" max="5000" value="5000" step="128">
+                            <div class="range-display">
+                                <span id="dim-min-display">0</span> - <span id="dim-max-display">5000</span>
+                            </div>
+                        </div>
+
+                        <label class="filter-label">Quantization Support</label>
+                        <div class="checkbox-group-inline">
+                            <label><input type="checkbox" class="quant-filter" value="fp32" checked> FP32</label>
+                            <label><input type="checkbox" class="quant-filter" value="fp16" checked> FP16</label>
+                            <label><input type="checkbox" class="quant-filter" value="int8" checked> INT8</label>
+                            <label><input type="checkbox" class="quant-filter" value="int4" checked> INT4</label>
+                        </div>
+
+                        <label class="filter-label">License</label>
+                        <select id="filter-license" class="filter-select">
+                            <option value="">All Licenses</option>
+                            <option value="apache">Apache 2.0</option>
+                            <option value="mit">MIT</option>
+                            <option value="proprietary">Proprietary</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 4. Benchmark Performance (Collapsed by Default) -->
+                <div class="filter-section" id="section-benchmark">
+                    <div class="filter-section-header" onclick="toggleFilterSection('benchmark')">
+                        <span>📊 Benchmark Performance</span>
+                        <span class="toggle-icon">▶</span>
+                    </div>
+                    <div class="filter-section-content" style="display: none;">
+                        <label class="filter-label">MTEB Score Range</label>
+                        <div class="range-slider-group">
+                            <input type="range" id="mteb-min" min="0" max="100" value="0" step="5">
+                            <input type="range" id="mteb-max" min="0" max="100" value="100" step="5">
+                            <div class="range-display">
+                                <span id="mteb-min-display">0</span> - <span id="mteb-max-display">100</span>
+                            </div>
+                        </div>
+
+                        <label class="filter-label">BEIR Score Range</label>
+                        <div class="range-slider-group">
+                            <input type="range" id="beir-min" min="0" max="100" value="0" step="5">
+                            <input type="range" id="beir-max" min="0" max="100" value="100" step="5">
+                            <div class="range-display">
+                                <span id="beir-min-display">0</span> - <span id="beir-max-display">100</span>
+                                <label class="inline-checkbox"><input type="checkbox" id="beir-include-na" checked> Include N/A</label>
+                            </div>
+                        </div>
+
+                        <label class="filter-label">Multilingual Support</label>
+                        <label class="toggle-checkbox">
+                            <input type="checkbox" id="filter-multilingual">
+                            <span>Show multilingual models only</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 5. Developer Ecosystem (Collapsed by Default) -->
+                <div class="filter-section" id="section-developer">
+                    <div class="filter-section-header" onclick="toggleFilterSection('developer')">
+                        <span>👥 Developer Ecosystem</span>
+                        <span class="toggle-icon">▶</span>
+                    </div>
+                    <div class="filter-section-content" style="display: none;">
+                        <label class="filter-label">Developer/Organization</label>
+                        <select id="filter-developer" class="filter-select">
+                            <option value="">All Developers</option>
+                        </select>
+                    </div>
+                </div>
+
+                </div>
+
+                <!-- Filter Status with Active Pills -->
+                <div class="filter-status-bar">
+                    <div class="filter-status" id="filter-status">Showing all 21 models from 3 countries</div>
+                    <div class="filter-pills" id="filter-pills"></div>
+                </div>
+
+                <!-- Filter Actions -->
+                <div class="filter-actions">
+                    <button class="btn-reset" id="btn-reset">Reset</button>
+                    <button class="btn-apply" id="btn-apply">Apply</button>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="main-content">
+                <!-- Tab Navigation -->
+                <div class="view-tabs">
+                    <button class="tab-button active" data-view="overview">🗺️ Overview</button>
+                    <button class="tab-button" data-view="timeline">⏱️ Timeline</button>
+                    <button class="tab-button" data-view="developers">👥 Developers</button>
+                    <button class="tab-button" data-view="technical">🔧 Technical</button>
+                    <button class="tab-button" data-view="benchmarks">📊 Benchmarks</button>
+                </div>
+
+                <!-- Tab Panels -->
+                <div id="view-overview" class="view-panel active">
+                    <h2 class="panel-title">🌍 Global Distribution of Embedding Models</h2>
+                    <div class="chart-container">
+                        <div id="map-chart"></div>
+                    </div>
+                </div>
+
+                <div id="view-timeline" class="view-panel">
+                    <h2 class="panel-title">⏱️ Temporal Patterns: Release Timeline</h2>
+                    <div class="chart-container">
+                        <div id="temporal-chart"></div>
+                    </div>
+                </div>
+
+                <div id="view-developers" class="view-panel">
+                    <h2 class="panel-title">👥 Developer Ecosystem Analysis</h2>
+                    <div class="chart-container">
+                        <div id="developer-chart"></div>
+                    </div>
+                </div>
+
+                <div id="view-technical" class="view-panel">
+                    <h2 class="panel-title">🔧 Technical Specialization Patterns</h2>
+                    <div class="chart-container">
+                        <div id="technical-chart"></div>
+                    </div>
+                </div>
+
+                <div id="view-benchmarks" class="view-panel">
+                    <h2 class="panel-title">📊 Benchmark Performance Comparison</h2>
+                    <div class="chart-container">
+                        <div id="benchmark-chart"></div>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <h3>How to Use This Analysis</h3>
+                    <ul>
+                        <li><strong>Tabs:</strong> Switch between different analysis views using the tabs above</li>
+                        <li><strong>Filters:</strong> Use the left sidebar to filter data by year, country, model size, or developer</li>
+                        <li><strong>World Map:</strong> Switch between different views (model count, average accuracy, benchmark scores) using the dropdown menu</li>
+                        <li><strong>Hover for Details:</strong> Hover over any chart element to see detailed information about models, countries, and metrics</li>
+                        <li><strong>Interactive Controls:</strong> Use zoom, pan, and selection tools on each chart for detailed exploration</li>
+                        <li><strong>Timeline:</strong> Explore how model releases have evolved over time across different countries</li>
+                        <li><strong>Developer Ecosystem:</strong> Understand which organizations are developing models in each country</li>
+                        <li><strong>Technical Analysis:</strong> Compare technical specifications (architecture, dimensions, licenses) by country</li>
+                        <li><strong>Benchmarks:</strong> Analyze how models from different countries perform on various benchmark suites</li>
+                        <li><strong>Download:</strong> Click the camera icon on any chart to save it as an image</li>
+                    </ul>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Store raw model data for filtering
+        const ALL_MODELS_DATA = [{"name": "emb_essays_all_minilm_22m", "country": "Germany", "developer": "UKPLab (sentence-transformers)", "release_date": "2021-06-30", "size_mb": 0, "parameters_m": 22.0, "dimensions": 384, "context_length": 512, "mteb_score": 60.0, "beir_score": 0.0, "miracl_score": 0.0, "license": "Apache 2.0", "multilingual": false, "quantization": ["fp32", "fp16"], "accuracy": 0.5933333333333334}, {"name": "emb_essays_all_minilm_33m", "country": "Germany", "developer": "UKPLab (sentence-transformers)", "release_date": "2021-06-30", "size_mb": 0, "parameters_m": 33.0, "dimensions": 384, "context_length": 512, "mteb_score": 62.0, "beir_score": 0.0, "miracl_score": 0.0, "license": "Apache 2.0", "multilingual": false, "quantization": ["fp32", "fp16"], "accuracy": 0.6}, {"name": "emb_essays_snowflake_arctic_embed_22m", "country": "USA", "developer": "Snowflake Inc.", "release_date": "2024-04-16", "size_mb": 0, "parameters_m": 22.0, "dimensions": 384, "context_length": 512, "mteb_score": 53.28, "beir_score": 50.15, "miracl_score": 0.0, "license": "Apache 2.0", "multilingual": false, "quantization": ["fp32"], "accuracy": 0.4733333333333333}, {"name": "emb_essays_snowflake_arctic_embed_110m", "country": "USA", "developer": "Snowflake Inc.", "release_date": "2024-04-16", "size_mb": 0, "parameters_m": 110.0, "dimensions": 768, "context_length": 512, "mteb_score": 54.9, "beir_score": 53.91, "miracl_score": 0.0, "license": "Apache 2.0", "multilingual": true, "quantization": ["fp32"], "accuracy": 0.6033333333333334}, {"name": "emb_essays_snowflake_arctic_embed_137m", "country": "USA", "developer": "Snowflake Inc.", "release_date": "2024-04-16", "size_mb": 0, "parameters_m": 137.0, "dimensions": 768, "context_length": 2048, "mteb_score": 54.83, "beir_score": 53.91, "miracl_score": 0.0, "license": "Apache 2.0", "multilingual": false, "quantization": ["fp32"], "accuracy": 0.4933333333333333}, {"name": "emb_essays_snowflake_arctic_embed_335m", "country": "USA", "developer": "Snowflake Inc.", "release_date": "2024-04-16", "size_mb": 0, "parameters_m": 335.0, "dimensions": 1024, "context_length": 512, "mteb_score": 55.98, "beir_score": 55.98, "miracl_score": 0.0, "license": "Apache 2.0", "multilingual": true, "quantization": ["fp32"], "accuracy": 0.4133333333333333}, {"name": "emb_essays_nomic_embed_text_1_5", "country": "USA", "developer": "Nomic AI", "release_date": "2024-02-01", "size_mb": 0, "parameters_m": 137.0, "dimensions": 768, "context_length": 2048, "mteb_score": 62.28, "beir_score": 0.0, "miracl_score": 0.0, "license": "Apache 2.0", "multilingual": false, "quantization": ["fp32"], "accuracy": 0.6566666666666666}, {"name": "emb_essays_snowflake_arctic_embed2_568m", "country": "USA", "developer": "Snowflake Inc.", "release_date": "2024-12-04", "size_mb": 0, "parameters_m": 568.0, "dimensions": 1024, "context_length": 8192, "mteb_score": 55.6, "beir_score": 55.6, "miracl_score": 55.8, "license": "Apache 2.0", "multilingual": true, "quantization": ["fp16", "int8", "int4"], "accuracy": 0.7033333333333334}, {"name": "emb_essays_bge_large_335m", "country": "China", "developer": "BAAI (Beijing Academy of Artificial Intelligence)", "release_date": "2023-09-12", "size_mb": 0, "parameters_m": 335.0, "dimensions": 1024, "context_length": 512, "mteb_score": 64.23, "beir_score": 54.29, "miracl_score": 0.0, "license": "MIT", "multilingual": false, "quantization": ["fp32", "fp16"], "accuracy": 0.6283333333333333}, {"name": "emb_essays_qwen3_embedding_4b_q8_0", "country": "China", "developer": "Qwen Team, Alibaba Cloud / DAMO Academy", "release_date": "2025-06-05", "size_mb": 0, "parameters_m": 4000.0, "dimensions": 2560, "context_length": 40960, "mteb_score": 69.45, "beir_score": 0.0, "miracl_score": 0.0, "license": "Apache 2.0", "multilingual": false, "quantization": ["fp32"], "accuracy": 0.73}, {"name": "emb_essays_qwen3_embedding_0_6b_fp16", "country": "China", "developer": "Qwen Team, Alibaba Cloud / DAMO Academy", "release_date": "2025-06-05", "size_mb": 0, "parameters_m": 600.0, "dimensions": 1024, "context_length": 32768, "mteb_score": 64.33, "beir_score": 0.0, "miracl_score": 0.0, "license": "Apache 2.0", "multilingual": false, "quantization": ["fp16"], "accuracy": 0.715}, {"name": "emb_essays_qwen3_embedding_0_6b_q8_0", "country": "China", "developer": "Qwen Team, Alibaba Cloud / DAMO Academy", "release_date": "2025-06-05", "size_mb": 0, "parameters_m": 600.0, "dimensions": 1024, "context_length": 32768, "mteb_score": 64.0, "beir_score": 0.0, "miracl_score": 0.0, "license": "Apache 2.0", "multilingual": false, "quantization": ["fp32"], "accuracy": 0.7166666666666667}, {"name": "emb_essays_bge_m3_567m", "country": "China", "developer": "BAAI (Beijing Academy of Artificial Intelligence)", "release_date": "2024-01-30", "size_mb": 0, "parameters_m": 567.0, "dimensions": 1024, "context_length": 8192, "mteb_score": 59.56, "beir_score": 48.8, "miracl_score": 70.0, "license": "MIT", "multilingual": false, "quantization": ["fp32", "fp16"], "accuracy": 0.7266666666666667}, {"name": "emb_essays_embeddinggemma_300m_qat_q4", "country": "USA", "developer": "Google DeepMind", "release_date": "2025-09-04", "size_mb": 0, "parameters_m": 300.0, "dimensions": 768, "context_length": 2048, "mteb_score": 60.62, "beir_score": 0.0, "miracl_score": 0.0, "license": "Gemma License (ai.google.dev/gemma/terms)", "multilingual": true, "quantization": ["fp32"], "accuracy": 0.2066666666666666}, {"name": "emb_essays_embeddinggemma_300m_qat_q8", "country": "USA", "developer": "Google DeepMind", "release_date": "2025-09-04", "size_mb": 0, "parameters_m": 300.0, "dimensions": 768, "context_length": 2048, "mteb_score": 60.93, "beir_score": 0.0, "miracl_score": 0.0, "license": "Gemma License (ai.google.dev/gemma/terms)", "multilingual": true, "quantization": ["fp32"], "accuracy": 0.1733333333333333}, {"name": "emb_essays_embeddinggemma_300m_bf16", "country": "USA", "developer": "Google DeepMind", "release_date": "2025-09-04", "size_mb": 0, "parameters_m": 300.0, "dimensions": 768, "context_length": 2048, "mteb_score": 61.15, "beir_score": 0.0, "miracl_score": 0.0, "license": "Gemma License (ai.google.dev/gemma/terms)", "multilingual": true, "quantization": ["fp32"], "accuracy": 0.17}, {"name": "emb_essays_granite_embedding_30m_fp16", "country": "USA", "developer": "IBM Research / IBM Granite Team", "release_date": "2024-12-18", "size_mb": 0, "parameters_m": 30.0, "dimensions": 384, "context_length": 512, "mteb_score": 56.5, "beir_score": 49.1, "miracl_score": 0.0, "license": "Apache 2.0", "multilingual": false, "quantization": ["fp16"], "accuracy": 0.6166666666666667}, {"name": "emb_essays_granite_embedding_278m_fp16", "country": "USA", "developer": "IBM Research / IBM Granite Team", "release_date": "2024-12-18", "size_mb": 0, "parameters_m": 278.0, "dimensions": 768, "context_length": 512, "mteb_score": 58.3, "beir_score": 49.5, "miracl_score": 58.3, "license": "Apache 2.0", "multilingual": true, "quantization": ["fp16"], "accuracy": 0.6216666666666667}, {"name": "emb_essays_mxbai_embed_large", "country": "Germany", "developer": "Mixedbread AI (Berlin)", "release_date": "2024-03-08", "size_mb": 0, "parameters_m": 335.0, "dimensions": 1024, "context_length": 512, "mteb_score": 64.68, "beir_score": 54.39, "miracl_score": 0.0, "license": "Apache 2.0", "multilingual": false, "quantization": ["int8", "int4"], "accuracy": 0.6466666666666666}, {"name": "emb_essays_qwen3_embedding_8b", "country": "China", "developer": "Qwen Team, Alibaba Cloud / DAMO Academy", "release_date": "2025-06-05", "size_mb": 0, "parameters_m": 8000.0, "dimensions": 4096, "context_length": 40960, "mteb_score": 70.58, "beir_score": 0.0, "miracl_score": 0.0, "license": "Apache 2.0", "multilingual": false, "quantization": ["fp32"], "accuracy": 0.7466666666666667}, {"name": "emb_essays_qwen3_embedding_4b_q4_k_m", "country": "China", "developer": "Qwen Team, Alibaba Cloud / DAMO Academy", "release_date": "2025-06-05", "size_mb": 0, "parameters_m": 4000.0, "dimensions": 2560, "context_length": 40960, "mteb_score": 69.45, "beir_score": 0.0, "miracl_score": 0.0, "license": "Apache 2.0", "multilingual": false, "quantization": ["fp32"], "accuracy": 0.7216666666666667}];
+        console.log('Loaded model data for filtering:', ALL_MODELS_DATA.length, 'models');
+
+        // Store original chart data for filtering
+        let originalChartData = {};
+        let currentFilters = {
+            yearMin: 2021,
+            yearMax: 2025,
+            countries: ['USA', 'China', 'Germany'],
+            size: '',
+            developer: ''
+        };
+
+        // Tab switching
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update active states
+                document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Show/hide panels
+                const view = btn.dataset.view;
+                document.querySelectorAll('.view-panel').forEach(panel => {
+                    panel.classList.toggle('active', panel.id === `view-${view}`);
+                });
+            });
+        });
+
+        // Sidebar toggle
+        document.getElementById('sidebar-toggle').addEventListener('click', function() {
+            const sidebar = document.getElementById('filters-sidebar');
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            sidebar.classList.toggle('collapsed');
+            this.textContent = isCollapsed ? '◀' : '▶';
+            this.title = isCollapsed ? 'Hide Filters' : 'Show Filters';
+        });
+
+        // Country checkboxes handling
+        document.querySelectorAll('.checkbox-group input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', updateCountryFilter);
+        });
+
+        function updateCountryFilter() {
+            currentFilters.countries = Array.from(
+                document.querySelectorAll('.checkbox-group input[type="checkbox"]:checked')
+            ).map(cb => cb.value);
+        }
+
+        // Apply filters button
+        document.getElementById('btn-apply').addEventListener('click', applyFilters);
+
+        // Filter section toggle (collapsible sections)
+        function toggleFilterSection(sectionName) {
+            const section = document.getElementById(`section-${sectionName}`);
+            const content = section.querySelector('.filter-section-content');
+            const isExpanded = section.classList.contains('expanded');
+
+            if (isExpanded) {
+                section.classList.remove('expanded');
+                content.style.display = 'none';
+            } else {
+                section.classList.add('expanded');
+                content.style.display = 'block';
+            }
+        }
+
+        // Update range slider gradient to visually show selected range
+        function updateRangeSliderGradient(sliderId, absoluteMin, absoluteMax, currentMin, currentMax) {
+            const slider = document.getElementById(sliderId);
+            if (!slider) return;
+
+            // Calculate percentages for gradient
+            const range = absoluteMax - absoluteMin;
+            const minPercent = ((currentMin - absoluteMin) / range) * 100;
+            const maxPercent = ((currentMax - absoluteMin) / range) * 100;
+
+            // Create gradient: gray before selection, purple in selection, gray after
+            const gradient = `linear-gradient(to right,
+                #e9ecef 0%,
+                #e9ecef ${minPercent}%,
+                #667eea ${minPercent}%,
+                #667eea ${maxPercent}%,
+                #e9ecef ${maxPercent}%,
+                #e9ecef 100%)`;
+
+            slider.style.background = gradient;
+        }
+
+        // Range slider listeners (year range)
+        const yearMinSlider = document.getElementById('year-min-slider');
+        const yearMaxSlider = document.getElementById('year-max-slider');
+        const yearMinDisplay = document.getElementById('year-min-display');
+        const yearMaxDisplay = document.getElementById('year-max-display');
+        const yearMinDisplay2 = document.getElementById('year-min-display-2');
+        const yearMaxDisplay2 = document.getElementById('year-max-display-2');
+
+        if (yearMinSlider && yearMaxSlider) {
+            yearMinSlider.addEventListener('input', function() {
+                const min = parseInt(this.value);
+                const max = parseInt(yearMaxSlider.value);
+                if (min > max) {
+                    yearMaxSlider.value = min;
+                }
+                yearMinDisplay.textContent = this.value;
+                yearMaxDisplay.textContent = yearMaxSlider.value;
+                if (yearMinDisplay2) yearMinDisplay2.textContent = this.value;
+                if (yearMaxDisplay2) yearMaxDisplay2.textContent = yearMaxSlider.value;
+                // Update gradient
+                updateRangeSliderGradient('year-min-slider', 2021, 2025, parseInt(this.value), parseInt(yearMaxSlider.value));
+            });
+
+            yearMaxSlider.addEventListener('input', function() {
+                const min = parseInt(yearMinSlider.value);
+                const max = parseInt(this.value);
+                if (max < min) {
+                    yearMinSlider.value = max;
+                }
+                yearMinDisplay.textContent = yearMinSlider.value;
+                yearMaxDisplay.textContent = this.value;
+                if (yearMinDisplay2) yearMinDisplay2.textContent = yearMinSlider.value;
+                if (yearMaxDisplay2) yearMaxDisplay2.textContent = this.value;
+                // Update gradient
+                updateRangeSliderGradient('year-max-slider', 2021, 2025, parseInt(yearMinSlider.value), parseInt(this.value));
+            });
+        }
+
+        // Range slider listeners (MTEB, BEIR, context, dimensions)
+        function setupRangeSlider(minId, maxId, minDisplayId, maxDisplayId, absoluteMin, absoluteMax) {
+            const minSlider = document.getElementById(minId);
+            const maxSlider = document.getElementById(maxId);
+            const minDisplay = document.getElementById(minDisplayId);
+            const maxDisplay = document.getElementById(maxDisplayId);
+
+            if (!minSlider || !maxSlider) return;
+
+            // Initialize gradients
+            const initMin = parseInt(minSlider.value);
+            const initMax = parseInt(maxSlider.value);
+            updateRangeSliderGradient(minId, absoluteMin, absoluteMax, initMin, initMax);
+            updateRangeSliderGradient(maxId, absoluteMin, absoluteMax, initMin, initMax);
+
+            minSlider.addEventListener('input', function() {
+                const min = parseInt(this.value);
+                const max = parseInt(maxSlider.value);
+                if (min > max) {
+                    maxSlider.value = min;
+                }
+                minDisplay.textContent = this.value;
+                maxDisplay.textContent = maxSlider.value;
+                // Update gradients
+                updateRangeSliderGradient(minId, absoluteMin, absoluteMax, parseInt(this.value), parseInt(maxSlider.value));
+                updateRangeSliderGradient(maxId, absoluteMin, absoluteMax, parseInt(this.value), parseInt(maxSlider.value));
+            });
+
+            maxSlider.addEventListener('input', function() {
+                const min = parseInt(minSlider.value);
+                const max = parseInt(this.value);
+                if (max < min) {
+                    minSlider.value = max;
+                }
+                minDisplay.textContent = minSlider.value;
+                maxDisplay.textContent = this.value;
+                // Update gradients
+                updateRangeSliderGradient(minId, absoluteMin, absoluteMax, parseInt(minSlider.value), parseInt(this.value));
+                updateRangeSliderGradient(maxId, absoluteMin, absoluteMax, parseInt(minSlider.value), parseInt(this.value));
+            });
+        }
+
+        // Setup all range sliders with proper min/max ranges
+        setupRangeSlider('mteb-min', 'mteb-max', 'mteb-min-display', 'mteb-max-display', 0, 100);
+        setupRangeSlider('beir-min', 'beir-max', 'beir-min-display', 'beir-max-display', 0, 100);
+        setupRangeSlider('context-min', 'context-max', 'context-min-display', 'context-max-display', 0, 50000);
+        setupRangeSlider('dim-min', 'dim-max', 'dim-min-display', 'dim-max-display', 0, 5000);
+
+        // Enhanced reset button - resets ALL filters
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            // Reset year sliders
+            if (yearMinSlider) yearMinSlider.value = 2021;
+            if (yearMaxSlider) yearMaxSlider.value = 2025;
+            if (yearMinDisplay) yearMinDisplay.textContent = '2021';
+            if (yearMaxDisplay) yearMaxDisplay.textContent = '2025';
+            if (yearMinDisplay2) yearMinDisplay2.textContent = '2021';
+            if (yearMaxDisplay2) yearMaxDisplay2.textContent = '2025';
+
+            // Reset MTEB sliders
+            const mtebMin = document.getElementById('mteb-min');
+            const mtebMax = document.getElementById('mteb-max');
+            if (mtebMin) mtebMin.value = 0;
+            if (mtebMax) mtebMax.value = 100;
+            const mtebMinDisplay = document.getElementById('mteb-min-display');
+            const mtebMaxDisplay = document.getElementById('mteb-max-display');
+            if (mtebMinDisplay) mtebMinDisplay.textContent = '0';
+            if (mtebMaxDisplay) mtebMaxDisplay.textContent = '100';
+
+            // Reset BEIR sliders
+            const beirMin = document.getElementById('beir-min');
+            const beirMax = document.getElementById('beir-max');
+            if (beirMin) beirMin.value = 0;
+            if (beirMax) beirMax.value = 100;
+            const beirMinDisplay = document.getElementById('beir-min-display');
+            const beirMaxDisplay = document.getElementById('beir-max-display');
+            if (beirMinDisplay) beirMinDisplay.textContent = '0';
+            if (beirMaxDisplay) beirMaxDisplay.textContent = '100';
+            const beirIncludeNA = document.getElementById('beir-include-na');
+            if (beirIncludeNA) beirIncludeNA.checked = true;
+
+            // Reset context length sliders
+            const contextMin = document.getElementById('context-min');
+            const contextMax = document.getElementById('context-max');
+            if (contextMin) contextMin.value = 0;
+            if (contextMax) contextMax.value = 50000;
+            const contextMinDisplay = document.getElementById('context-min-display');
+            const contextMaxDisplay = document.getElementById('context-max-display');
+            if (contextMinDisplay) contextMinDisplay.textContent = '0';
+            if (contextMaxDisplay) contextMaxDisplay.textContent = '50000';
+
+            // Reset dimensions sliders
+            const dimMin = document.getElementById('dim-min');
+            const dimMax = document.getElementById('dim-max');
+            if (dimMin) dimMin.value = 0;
+            if (dimMax) dimMax.value = 5000;
+            const dimMinDisplay = document.getElementById('dim-min-display');
+            const dimMaxDisplay = document.getElementById('dim-max-display');
+            if (dimMinDisplay) dimMinDisplay.textContent = '0';
+            if (dimMaxDisplay) dimMaxDisplay.textContent = '5000';
+
+            // Reset dropdowns
+            const sizeFilter = document.getElementById('filter-size');
+            const devFilter = document.getElementById('filter-developer');
+            const licenseFilter = document.getElementById('filter-license');
+            if (sizeFilter) sizeFilter.value = '';
+            if (devFilter) devFilter.value = '';
+            if (licenseFilter) licenseFilter.value = '';
+
+            // Reset all checkboxes (countries and quantization)
+            document.querySelectorAll('.checkbox-group input[type="checkbox"], .country-filter').forEach(cb => {
+                cb.checked = true;
+            });
+            document.querySelectorAll('.quant-filter').forEach(cb => {
+                cb.checked = true;
+            });
+
+            // Reset multilingual checkbox
+            const multilingualFilter = document.getElementById('filter-multilingual');
+            if (multilingualFilter) multilingualFilter.checked = false;
+
+            // Reset filter state
+            currentFilters = {
+                yearMin: 2021,
+                yearMax: 2025,
+                countries: ['USA', 'China', 'Germany'],
+                size: '',
+                developer: '',
+                mtebMin: 0,
+                mtebMax: 100,
+                beirMin: 0,
+                beirMax: 100,
+                beirIncludeNA: true,
+                contextMin: 0,
+                contextMax: 50000,
+                dimMin: 0,
+                dimMax: 5000,
+                quantization: ['fp32', 'fp16', 'int8', 'int4'],
+                license: '',
+                multilingualOnly: false
+            };
+
+            // Reset gradients for all sliders
+            if (yearMinSlider && yearMaxSlider) {
+                updateRangeSliderGradient('year-min-slider', 2021, 2025, 2021, 2025);
+                updateRangeSliderGradient('year-max-slider', 2021, 2025, 2021, 2025);
+            }
+            updateRangeSliderGradient('mteb-min', 0, 100, 0, 100);
+            updateRangeSliderGradient('mteb-max', 0, 100, 0, 100);
+            updateRangeSliderGradient('beir-min', 0, 100, 0, 100);
+            updateRangeSliderGradient('beir-max', 0, 100, 0, 100);
+            updateRangeSliderGradient('context-min', 0, 50000, 0, 50000);
+            updateRangeSliderGradient('context-max', 0, 50000, 0, 50000);
+            updateRangeSliderGradient('dim-min', 0, 5000, 0, 5000);
+            updateRangeSliderGradient('dim-max', 0, 5000, 0, 5000);
+
+            // Reapply (will show all data)
+            applyFilters();
+        });
+
+        function applyFilters() {
+            // Update filter state - read ALL filter values
+            currentFilters.yearMin = parseInt(yearMinSlider?.value || 2021);
+            currentFilters.yearMax = parseInt(yearMaxSlider?.value || 2025);
+            currentFilters.size = document.getElementById('filter-size')?.value || '';
+            currentFilters.developer = document.getElementById('filter-developer')?.value || '';
+
+            // NEW: MTEB score range
+            currentFilters.mtebMin = parseInt(document.getElementById('mteb-min')?.value || 0);
+            currentFilters.mtebMax = parseInt(document.getElementById('mteb-max')?.value || 100);
+
+            // NEW: BEIR score range
+            currentFilters.beirMin = parseInt(document.getElementById('beir-min')?.value || 0);
+            currentFilters.beirMax = parseInt(document.getElementById('beir-max')?.value || 100);
+            currentFilters.beirIncludeNA = document.getElementById('beir-include-na')?.checked !== false;
+
+            // NEW: Context length range
+            currentFilters.contextMin = parseInt(document.getElementById('context-min')?.value || 0);
+            currentFilters.contextMax = parseInt(document.getElementById('context-max')?.value || 50000);
+
+            // NEW: Dimensions range
+            currentFilters.dimMin = parseInt(document.getElementById('dim-min')?.value || 0);
+            currentFilters.dimMax = parseInt(document.getElementById('dim-max')?.value || 5000);
+
+            // NEW: Quantization filters
+            const quantCheckboxes = document.querySelectorAll('.quant-filter:checked');
+            currentFilters.quantization = Array.from(quantCheckboxes).map(cb => cb.value);
+
+            // NEW: License filter
+            currentFilters.license = document.getElementById('filter-license')?.value || '';
+
+            // NEW: Multilingual filter
+            currentFilters.multilingualOnly = document.getElementById('filter-multilingual')?.checked || false;
+
+            console.log('Applying filters:', currentFilters);
+
+            // Filter the model data with ALL filter types
+            const filteredModels = ALL_MODELS_DATA.filter(model => {
+                // 1. Year filter
+                if (model.release_date) {
+                    const year = parseInt(model.release_date.substring(0, 4));
+                    if (year < currentFilters.yearMin || year > currentFilters.yearMax) {
+                        return false;
+                    }
+                }
+
+                // 2. Country filter
+                if (!currentFilters.countries.includes(model.country)) {
+                    return false;
+                }
+
+                // 3. Size filter (parameters-based)
+                if (currentFilters.size) {
+                    const paramsM = model.parameters_m || 0;
+                    if (currentFilters.size === 'tiny' && paramsM >= 50) return false;
+                    if (currentFilters.size === 'small' && (paramsM < 50 || paramsM >= 200)) return false;
+                    if (currentFilters.size === 'medium' && (paramsM < 200 || paramsM >= 1000)) return false;
+                    if (currentFilters.size === 'large' && (paramsM < 1000 || paramsM >= 10000)) return false;
+                    if (currentFilters.size === 'xlarge' && paramsM < 10000) return false;
+                }
+
+                // 4. Developer filter
+                if (currentFilters.developer && model.developer !== currentFilters.developer) {
+                    return false;
+                }
+
+                // 5. MTEB score filter
+                const mtebScore = model.mteb_score || 0;
+                if (mtebScore > 0) {  // Only filter if model has MTEB score
+                    if (mtebScore < currentFilters.mtebMin || mtebScore > currentFilters.mtebMax) {
+                        return false;
+                    }
+                }
+
+                // 6. BEIR score filter
+                const beirScore = model.beir_score || 0;
+                if (beirScore > 0) {  // Only filter if model has BEIR score
+                    if (beirScore < currentFilters.beirMin || beirScore > currentFilters.beirMax) {
+                        return false;
+                    }
+                } else if (!currentFilters.beirIncludeNA) {
+                    // Exclude models without BEIR score if "Include N/A" is unchecked
+                    return false;
+                }
+
+                // 7. Context length filter
+                const contextLength = model.context_length || 0;
+                if (contextLength > 0 && (contextLength < currentFilters.contextMin || contextLength > currentFilters.contextMax)) {
+                    return false;
+                }
+
+                // 8. Dimensions filter
+                const dimensions = model.dimensions || 0;
+                if (dimensions > 0 && (dimensions < currentFilters.dimMin || dimensions > currentFilters.dimMax)) {
+                    return false;
+                }
+
+                // 9. Quantization filter
+                if (currentFilters.quantization.length > 0 && currentFilters.quantization.length < 4) {
+                    // Only apply if not all are selected
+                    const modelQuant = model.quantization || ['fp32'];
+                    const hasMatch = currentFilters.quantization.some(q => modelQuant.includes(q));
+                    if (!hasMatch) {
+                        return false;
+                    }
+                }
+
+                // 10. License filter
+                if (currentFilters.license) {
+                    const modelLicense = (model.license || '').toLowerCase();
+                    if (currentFilters.license === 'apache' && !modelLicense.includes('apache')) return false;
+                    if (currentFilters.license === 'mit' && !modelLicense.includes('mit')) return false;
+                    if (currentFilters.license === 'proprietary' && !modelLicense.includes('proprietary')) return false;
+                    if (currentFilters.license === 'other' && (modelLicense.includes('apache') || modelLicense.includes('mit') || modelLicense.includes('proprietary'))) return false;
+                }
+
+                // 11. Multilingual filter
+                if (currentFilters.multilingualOnly && !model.multilingual) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            console.log(`Filtered: ${filteredModels.length} / ${ALL_MODELS_DATA.length} models`);
+
+            // Update each chart with filtered data
+            updateChartsWithFilteredData(filteredModels);
+
+            // Update filter pills and status
+            updateFilterPills(filteredModels.length);
+        }
+
+        // Generate and display filter pills
+        function updateFilterPills(filteredCount) {
+            const pillsContainer = document.getElementById('filter-pills');
+            pillsContainer.innerHTML = '';
+            let pillCount = 0;
+
+            // Helper to add a pill
+            function addPill(label, filterType, value) {
+                const pill = document.createElement('div');
+                pill.className = 'filter-pill';
+                pill.innerHTML = `
+                    <span>${label}</span>
+                    <span class="remove" onclick="removeFilterPill('${filterType}', '${value}')" title="Remove filter">×</span>
+                `;
+                pillsContainer.appendChild(pill);
+                pillCount++;
+            }
+
+            // Country pills (show only if not all selected)
+            const allCountries = ['USA', 'China', 'Germany'];
+            if (currentFilters.countries.length < allCountries.length) {
+                currentFilters.countries.forEach(country => {
+                    addPill(`Country: ${country}`, 'country', country);
+                });
+            }
+
+            // Year range pill (if not default)
+            if (currentFilters.yearMin !== 2021 || currentFilters.yearMax !== 2025) {
+                addPill(`Years: ${currentFilters.yearMin}-${currentFilters.yearMax}`, 'year', '');
+            }
+
+            // Size pill
+            if (currentFilters.size) {
+                const sizeEl = document.getElementById('filter-size');
+                const sizeText = sizeEl?.selectedOptions[0]?.text || currentFilters.size;
+                addPill(`Size: ${sizeText}`, 'size', '');
+            }
+
+            // Developer pill
+            if (currentFilters.developer) {
+                addPill(`Dev: ${currentFilters.developer}`, 'developer', '');
+            }
+
+            // MTEB score pill (if not full range)
+            if (currentFilters.mtebMin !== 0 || currentFilters.mtebMax !== 100) {
+                addPill(`MTEB: ${currentFilters.mtebMin}-${currentFilters.mtebMax}`, 'mteb', '');
+            }
+
+            // BEIR score pill (if not full range)
+            if (currentFilters.beirMin !== 0 || currentFilters.beirMax !== 100) {
+                addPill(`BEIR: ${currentFilters.beirMin}-${currentFilters.beirMax}`, 'beir', '');
+            }
+
+            // BEIR Include N/A pill (if unchecked)
+            if (!currentFilters.beirIncludeNA) {
+                addPill(`BEIR: Exclude N/A`, 'beir-na', '');
+            }
+
+            // Context length pill (if not full range)
+            if (currentFilters.contextMin !== 0 || currentFilters.contextMax !== 50000) {
+                addPill(`Context: ${currentFilters.contextMin}-${currentFilters.contextMax}`, 'context', '');
+            }
+
+            // Dimensions pill (if not full range)
+            if (currentFilters.dimMin !== 0 || currentFilters.dimMax !== 5000) {
+                addPill(`Dimensions: ${currentFilters.dimMin}-${currentFilters.dimMax}`, 'dimensions', '');
+            }
+
+            // Quantization pill (if not all selected)
+            if (currentFilters.quantization.length > 0 && currentFilters.quantization.length < 4) {
+                addPill(`Quant: ${currentFilters.quantization.join(', ').toUpperCase()}`, 'quantization', '');
+            }
+
+            // License pill
+            if (currentFilters.license) {
+                const licenseEl = document.getElementById('filter-license');
+                const licenseText = licenseEl?.selectedOptions[0]?.text || currentFilters.license;
+                addPill(`License: ${licenseText}`, 'license', '');
+            }
+
+            // Multilingual pill
+            if (currentFilters.multilingualOnly) {
+                addPill(`Multilingual Only`, 'multilingual', '');
+            }
+
+            // Update status text
+            const countryCount = currentFilters.countries.length;
+            const statusText = `Showing ${filteredCount} models from ${countryCount} ${countryCount === 1 ? 'country' : 'countries'}`;
+            const filterText = pillCount > 0 ? ` (${pillCount} filter${pillCount > 1 ? 's' : ''} active)` : '';
+            document.getElementById('filter-status').textContent = statusText + filterText;
+        }
+
+        // Remove individual filter pill
+        function removeFilterPill(filterType, value) {
+            switch(filterType) {
+                case 'country':
+                    // Re-check the country checkbox
+                    const countryCheckbox = document.querySelector(`.country-filter[value="${value}"]`);
+                    if (countryCheckbox) countryCheckbox.checked = true;
+                    updateCountryFilter();
+                    break;
+                case 'year':
+                    yearMinSlider.value = 2021;
+                    yearMaxSlider.value = 2025;
+                    yearMinDisplay.textContent = '2021';
+                    yearMaxDisplay.textContent = '2025';
+                    if (yearMinDisplay2) yearMinDisplay2.textContent = '2021';
+                    if (yearMaxDisplay2) yearMaxDisplay2.textContent = '2025';
+                    break;
+                case 'size':
+                    document.getElementById('filter-size').value = '';
+                    break;
+                case 'developer':
+                    document.getElementById('filter-developer').value = '';
+                    break;
+                case 'mteb':
+                    document.getElementById('mteb-min').value = 0;
+                    document.getElementById('mteb-max').value = 100;
+                    document.getElementById('mteb-min-display').textContent = '0';
+                    document.getElementById('mteb-max-display').textContent = '100';
+                    break;
+                case 'beir':
+                    document.getElementById('beir-min').value = 0;
+                    document.getElementById('beir-max').value = 100;
+                    document.getElementById('beir-min-display').textContent = '0';
+                    document.getElementById('beir-max-display').textContent = '100';
+                    break;
+                case 'beir-na':
+                    document.getElementById('beir-include-na').checked = true;
+                    break;
+                case 'context':
+                    document.getElementById('context-min').value = 0;
+                    document.getElementById('context-max').value = 50000;
+                    document.getElementById('context-min-display').textContent = '0';
+                    document.getElementById('context-max-display').textContent = '50000';
+                    break;
+                case 'dimensions':
+                    document.getElementById('dim-min').value = 0;
+                    document.getElementById('dim-max').value = 5000;
+                    document.getElementById('dim-min-display').textContent = '0';
+                    document.getElementById('dim-max-display').textContent = '5000';
+                    break;
+                case 'quantization':
+                    document.querySelectorAll('.quant-filter').forEach(cb => cb.checked = true);
+                    break;
+                case 'license':
+                    document.getElementById('filter-license').value = '';
+                    break;
+                case 'multilingual':
+                    document.getElementById('filter-multilingual').checked = false;
+                    break;
+            }
+            // Re-apply filters
+            applyFilters();
+        }
+
+        function updateChartsWithFilteredData(filteredModels) {
+            // For each chart, filter traces by checking if the data belongs to filtered models/countries
+            const chartIds = ['map-chart', 'temporal-chart', 'developer-chart', 'technical-chart', 'benchmark-chart'];
+            const filteredCountries = currentFilters.countries;
+            const filteredModelNames = new Set(filteredModels.map(m => m.name));
+
+            chartIds.forEach(chartId => {
+                const chartDiv = document.getElementById(chartId);
+                if (!chartDiv || !chartDiv.data) return;
+
+                // Store original data if not already stored
+                if (!originalChartData[chartId]) {
+                    originalChartData[chartId] = {
+                        data: JSON.parse(JSON.stringify(chartDiv.data)),
+                        layout: JSON.parse(JSON.stringify(chartDiv.layout))
+                    };
+                }
+
+                // Get original chart data
+                const originalData = originalChartData[chartId].data;
+                const originalLayout = originalChartData[chartId].layout;
+
+                // Filter traces based on chart type
+                let filteredTraces = originalData.map(trace => {
+                    // Clone the trace
+                    let newTrace = JSON.parse(JSON.stringify(trace));
+
+                    // For choropleth maps, filter by locations
+                    if (newTrace.type === 'choropleth') {
+                        const indices = [];
+                        for (let i = 0; i < newTrace.locations.length; i++) {
+                            const loc = newTrace.locations[i];
+                            const country = loc === 'USA' ? 'USA' : loc === 'CHN' ? 'China' : loc === 'DEU' ? 'Germany' : null;
+                            if (country && filteredCountries.includes(country)) {
+                                indices.push(i);
+                            }
+                        }
+
+                        if (indices.length > 0) {
+                            newTrace.locations = indices.map(i => newTrace.locations[i]);
+                            newTrace.z = indices.map(i => newTrace.z[i]);
+                            if (newTrace.text) newTrace.text = indices.map(i => newTrace.text[i]);
+                        } else {
+                            // Hide trace if no data
+                            newTrace.visible = false;
+                        }
+                    }
+                    // For scatter plots (timeline), filter by country in name/legend
+                    else if (newTrace.type === 'scatter' && newTrace.name) {
+                        const traceCountry = newTrace.name;
+                        if (!filteredCountries.includes(traceCountry)) {
+                            newTrace.visible = false;
+                        } else {
+                            // Also filter points by year if dates are available
+                            if (newTrace.x && Array.isArray(newTrace.x) && currentFilters.yearMin && currentFilters.yearMax) {
+                                const indices = [];
+                                for (let i = 0; i < newTrace.x.length; i++) {
+                                    const dateStr = newTrace.x[i];
+                                    if (dateStr) {
+                                        const year = parseInt(dateStr.substring(0, 4));
+                                        if (year >= currentFilters.yearMin && year <= currentFilters.yearMax) {
+                                            indices.push(i);
+                                        }
+                                    } else {
+                                        indices.push(i);
+                                    }
+                                }
+
+                                if (indices.length > 0) {
+                                    newTrace.x = indices.map(i => newTrace.x[i]);
+                                    newTrace.y = indices.map(i => newTrace.y[i]);
+                                    if (newTrace.text) newTrace.text = indices.map(i => newTrace.text[i]);
+                                    if (newTrace.customdata) newTrace.customdata = indices.map(i => newTrace.customdata[i]);
+                                } else {
+                                    newTrace.visible = false;
+                                }
+                            }
+                        }
+                    }
+                    // For bar charts, filter by country
+                    else if (newTrace.type === 'bar') {
+                        // Check if this is a country-specific trace
+                        if (newTrace.name && (newTrace.name.includes('USA') || newTrace.name.includes('China') || newTrace.name.includes('Germany'))) {
+                            const hasCountry = filteredCountries.some(c => newTrace.name.includes(c));
+                            if (!hasCountry) {
+                                newTrace.visible = false;
+                            }
+                        }
+                    }
+
+                    return newTrace;
+                });
+
+                // Update the chart
+                try {
+                    Plotly.react(chartId, filteredTraces, originalLayout);
+                    console.log(`Updated ${chartId} with filtered data`);
+                } catch (err) {
+                    console.error(`Error updating ${chartId}:`, err);
+                }
+            });
+        }
+
+        // World Map
+        
+(function() {
+    console.log('Initializing map chart...');
+
+    try {
+        var figData = {"data": [{"colorbar": {"len": 0.7, "thickness": 20, "title": {"text": "Model<br>Count"}, "x": 0.95}, "colorscale": [[0.0, "rgb(247,251,255)"], [0.125, "rgb(222,235,247)"], [0.25, "rgb(198,219,239)"], [0.375, "rgb(158,202,225)"], [0.5, "rgb(107,174,214)"], [0.625, "rgb(66,146,198)"], [0.75, "rgb(33,113,181)"], [0.875, "rgb(8,81,156)"], [1.0, "rgb(8,48,107)"]], "customdata": [["BAAI (Beijing Academy of Artificial Intelligence), Qwen Team, Alibaba Cloud / DAMO Academy", "emb_essays_bge_large_335m, emb_essays_qwen3_embedding_4b_q8_0, emb_essays_qwen3_embedding_0_6b_fp16"], ["UKPLab (sentence-transformers), Mixedbread AI (Berlin)", "emb_essays_all_minilm_22m, emb_essays_all_minilm_33m, emb_essays_mxbai_embed_large"], ["Snowflake Inc., Nomic AI, Google DeepMind, IBM Research / IBM Granite Team", "emb_essays_snowflake_arctic_embed_22m, emb_essays_snowflake_arctic_embed_110m, emb_essays_snowflake_arctic_embed_137m"]], "hovertemplate": "<b>%{text}</b><br>Models: %{z}<br>Developers: %{customdata[0]}<br>Examples: %{customdata[1]}<br><extra></extra>", "locationmode": "ISO-3", "locations": ["CHN", "DEU", "USA"], "marker": {"line": {"color": "white", "width": 2}}, "name": "Model Count", "reversescale": false, "text": ["China", "Germany", "USA"], "visible": true, "z": [7, 3, 11], "zauto": true, "type": "choropleth"}, {"colorbar": {"len": 0.7, "thickness": 20, "tickformat": ".4f", "title": {"text": "Avg<br>Accuracy"}, "x": 0.95}, "colorscale": [[0.0, "#440154"], [0.1111111111111111, "#482878"], [0.2222222222222222, "#3e4989"], [0.3333333333333333, "#31688e"], [0.4444444444444444, "#26828e"], [0.5555555555555556, "#1f9e89"], [0.6666666666666666, "#35b779"], [0.7777777777777778, "#6ece58"], [0.8888888888888888, "#b5de2b"], [1.0, "#fde725"]], "customdata": [[7.0, 0.6283333333333333, 0.7466666666666667], [3.0, 0.5933333333333334, 0.6466666666666666], [11.0, 0.17, 0.7033333333333334]], "hovertemplate": "<b>%{text}</b><br>Avg Accuracy: %{z:.4f}<br>Models: %{customdata[0]}<br>Range: %{customdata[1]:.4f} - %{customdata[2]:.4f}<br><extra></extra>", "locationmode": "ISO-3", "locations": ["CHN", "DEU", "USA"], "marker": {"line": {"color": "white", "width": 2}}, "name": "Average Accuracy", "reversescale": false, "text": ["China", "Germany", "USA"], "visible": false, "z": [0.7121428571428572, 0.6133333333333333, 0.46651515151515155], "zauto": true, "type": "choropleth"}, {"colorbar": {"len": 0.7, "thickness": 20, "tickformat": ".2f", "title": {"text": "Avg<br>MTEB"}, "x": 0.95}, "colorscale": [[0.0, "rgb(165,0,38)"], [0.1, "rgb(215,48,39)"], [0.2, "rgb(244,109,67)"], [0.3, "rgb(253,174,97)"], [0.4, "rgb(254,224,139)"], [0.5, "rgb(255,255,191)"], [0.6, "rgb(217,239,139)"], [0.7, "rgb(166,217,106)"], [0.8, "rgb(102,189,99)"], [0.9, "rgb(26,152,80)"], [1.0, "rgb(0,104,55)"]], "customdata": [[14.727142857142857, 10.0, 7.0], [18.13, 0.0, 3.0], [33.46818181818182, 10.372727272727273, 11.0]], "hovertemplate": "<b>%{text}</b><br>Avg MTEB: %{z:.2f}<br>Avg BEIR: %{customdata[0]:.2f}<br>Avg MIRACL: %{customdata[1]:.2f}<br>Models: %{customdata[2]}<br><extra></extra>", "locationmode": "ISO-3", "locations": ["CHN", "DEU", "USA"], "marker": {"line": {"color": "white", "width": 2}}, "name": "MTEB Scores", "reversescale": false, "text": ["China", "Germany", "USA"], "visible": false, "z": [65.94285714285715, 62.22666666666667, 57.67], "zauto": true, "type": "choropleth"}, {"colorbar": {"len": 0.7, "thickness": 20, "tickformat": ".4f", "title": {"text": "Short Query<br>Accuracy"}, "x": 0.95}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "customdata": [[7], [3], [11]], "hovertemplate": "<b>%{text}</b><br>Short queries (concise questions)<br>Score: %{z:.4f}<br>Models: %{customdata[0]}<br><extra></extra>", "locationmode": "ISO-3", "locations": ["CHN", "DEU", "USA"], "marker": {"line": {"color": "white", "width": 2}}, "name": "Short Query Accuracy", "reversescale": false, "text": ["China", "Germany", "USA"], "visible": false, "z": [0.6749999999999999, 0.5888888888888889, 0.4393939393939394], "zauto": true, "type": "choropleth"}, {"colorbar": {"len": 0.7, "thickness": 20, "tickformat": ".4f", "title": {"text": "Long Query<br>Accuracy"}, "x": 0.95}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "customdata": [[7], [3], [11]], "hovertemplate": "<b>%{text}</b><br>Long queries (detailed questions)<br>Score: %{z:.4f}<br>Models: %{customdata[0]}<br><extra></extra>", "locationmode": "ISO-3", "locations": ["CHN", "DEU", "USA"], "marker": {"line": {"color": "white", "width": 2}}, "name": "Long Query Accuracy", "reversescale": false, "text": ["China", "Germany", "USA"], "visible": false, "z": [0.8083333333333333, 0.7111111111111111, 0.5666666666666667], "zauto": true, "type": "choropleth"}, {"colorbar": {"len": 0.7, "thickness": 20, "tickformat": ".4f", "title": {"text": "Direct Question<br>Accuracy"}, "x": 0.95}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "customdata": [[7], [3], [11]], "hovertemplate": "<b>%{text}</b><br>Direct questions (explicit)<br>Score: %{z:.4f}<br>Models: %{customdata[0]}<br><extra></extra>", "locationmode": "ISO-3", "locations": ["CHN", "DEU", "USA"], "marker": {"line": {"color": "white", "width": 2}}, "name": "Direct Question Accuracy", "reversescale": false, "text": ["China", "Germany", "USA"], "visible": false, "z": [0.7285714285714285, 0.65, 0.49015151515151517], "zauto": true, "type": "choropleth"}, {"colorbar": {"len": 0.7, "thickness": 20, "tickformat": ".4f", "title": {"text": "Implied Question<br>Accuracy"}, "x": 0.95}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "customdata": [[7], [3], [11]], "hovertemplate": "<b>%{text}</b><br>Implied questions (context-dependent)<br>Score: %{z:.4f}<br>Models: %{customdata[0]}<br><extra></extra>", "locationmode": "ISO-3", "locations": ["CHN", "DEU", "USA"], "marker": {"line": {"color": "white", "width": 2}}, "name": "Implied Question Accuracy", "reversescale": false, "text": ["China", "Germany", "USA"], "visible": false, "z": [0.7392857142857142, 0.65, 0.49318181818181817], "zauto": true, "type": "choropleth"}, {"colorbar": {"len": 0.7, "thickness": 20, "tickformat": ".4f", "title": {"text": "Unclear Question<br>Accuracy"}, "x": 0.95}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "customdata": [[7], [3], [11]], "hovertemplate": "<b>%{text}</b><br>Unclear/ambiguous questions<br>Score: %{z:.4f}<br>Models: %{customdata[0]}<br><extra></extra>", "locationmode": "ISO-3", "locations": ["CHN", "DEU", "USA"], "marker": {"line": {"color": "white", "width": 2}}, "name": "Unclear Question Accuracy", "reversescale": false, "text": ["China", "Germany", "USA"], "visible": false, "z": [0.6095238095238095, 0.4666666666666666, 0.3431818181818182], "zauto": true, "type": "choropleth"}, {"colorbar": {"len": 0.7, "thickness": 20, "tickformat": ".6f", "title": {"text": "Efficiency<br>Score"}, "x": 0.95}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "customdata": [[7], [3], [11]], "hovertemplate": "<b>%{text}</b><br>Accuracy per million parameters<br>Score: %{z:.4f}<br>Models: %{customdata[0]}<br><extra></extra>", "locationmode": "ISO-3", "locations": ["CHN", "DEU", "USA"], "marker": {"line": {"color": "white", "width": 2}}, "name": "Efficiency Score", "reversescale": false, "text": ["China", "Germany", "USA"], "visible": false, "z": [0.7121428571428572, 0.6133333333333333, 0.46651515151515155], "zauto": true, "type": "choropleth"}], "layout": {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "geo": {"projection": {"type": "natural earth"}, "showframe": true, "framecolor": "lightgray", "framewidth": 1, "showcoastlines": true, "coastlinecolor": "gray", "coastlinewidth": 1, "showland": true, "landcolor": "rgb(243, 243, 243)", "showcountries": true, "countrycolor": "white", "countrywidth": 0.5, "bgcolor": "rgba(245,245,250,0.3)", "oceancolor": "rgb(230, 245, 255)"}, "margin": {"l": 10, "r": 120, "t": 80, "b": 10}, "updatemenus": [{"active": 0, "bgcolor": "white", "bordercolor": "#ddd", "borderwidth": 1, "buttons": [{"args": [{"visible": [true, false, false, false, false, false, false, false, false]}, {"title": "Geographic Distribution: Model Count by Country"}], "label": "\ud83d\udcca Model Count", "method": "update"}, {"args": [{"visible": [false, true, false, false, false, false, false, false, false]}, {"title": "Geographic Distribution: Overall Accuracy by Country"}], "label": "\ud83c\udfaf Overall Accuracy", "method": "update"}, {"args": [{"visible": [false, false, false, true, false, false, false, false, false]}, {"title": "Geographic Distribution: Short Query Performance"}], "label": "\ud83d\udcac Short Query Accuracy", "method": "update"}, {"args": [{"visible": [false, false, false, false, true, false, false, false, false]}, {"title": "Geographic Distribution: Long Query Performance"}], "label": "\ud83d\udcdd Long Query Accuracy", "method": "update"}, {"args": [{"visible": [false, false, false, false, false, true, false, false, false]}, {"title": "Geographic Distribution: Direct Question Performance"}], "label": "\u2753 Direct Question Accuracy", "method": "update"}, {"args": [{"visible": [false, false, false, false, false, false, true, false, false]}, {"title": "Geographic Distribution: Implied Question Performance"}], "label": "\ud83d\udd0d Implied Question Accuracy", "method": "update"}, {"args": [{"visible": [false, false, false, false, false, false, false, true, false]}, {"title": "Geographic Distribution: Unclear Question Performance"}], "label": "\u2754 Unclear Question Accuracy", "method": "update"}, {"args": [{"visible": [false, false, false, false, false, false, false, false, true]}, {"title": "Geographic Distribution: Model Efficiency (Accuracy per M Parameters)"}], "label": "\ud83d\udc8e Efficiency Score", "method": "update"}, {"args": [{"visible": [false, false, true, false, false, false, false, false, false]}, {"title": "Geographic Distribution: MTEB Benchmark Scores"}], "label": "\ud83c\udfc6 MTEB Benchmark", "method": "update"}], "direction": "down", "font": {"size": 12}, "pad": {"r": 10, "t": 10}, "showactive": true, "x": 0.15, "xanchor": "left", "y": 1.15, "yanchor": "top"}], "title": {"text": "Geographic Distribution: Model Count by Country"}, "height": 700}};
+        var config = {"displayModeBar": true, "displaylogo": false, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "toImageButtonOptions": {"format": "png", "filename": "rag_benchmark_chart", "height": 800, "width": 1200, "scale": 2}};
+
+        console.log('map data loaded successfully');
+
+        // Render the chart
+        Plotly.newPlot('map-chart', figData.data, figData.layout, config)
+            .then(function() {
+                console.log('map rendered successfully');
+            })
+            .catch(function(err) {
+                console.error('map rendering error:', err);
+            });
+    } catch(err) {
+        console.error('map initialization error:', err);
+    }
+})();
+
+
+        // Temporal Chart
+        
+(function() {
+    console.log('Initializing temporal chart...');
+
+    try {
+        var figData = {"data": [{"customdata": [["BAAI (Beijing Academy of Artificial Intelligence)", 0, 64.23], ["BAAI (Beijing Academy of Artificial Intelligence)", 0, 59.56], ["Qwen Team, Alibaba Cloud / DAMO Academy", 0, 64.33], ["Qwen Team, Alibaba Cloud / DAMO Academy", 0, 64.0], ["Qwen Team, Alibaba Cloud / DAMO Academy", 0, 70.58], ["Qwen Team, Alibaba Cloud / DAMO Academy", 0, 69.45], ["Qwen Team, Alibaba Cloud / DAMO Academy", 0, 69.45]], "hovertemplate": "<b>%{text}</b><br>Country: China<br>Released: %{x|%Y-%m-%d}<br>Accuracy: %{y:.4f}<br>Developer: %{customdata[0]}<br>Dimensions: %{customdata[1]}<br>MTEB: %{customdata[2]:.2f}<br><extra></extra>", "marker": {"color": "#ff7f0e", "line": {"color": "white", "width": 1}, "opacity": 0.8, "size": 12}, "mode": "markers", "name": "China", "text": ["emb_essays_bge_large_335m", "emb_essays_bge_m3_567m", "emb_essays_qwen3_embedding_0_6b_fp16", "emb_essays_qwen3_embedding_0_6b_q8_0", "emb_essays_qwen3_embedding_8b", "emb_essays_qwen3_embedding_4b_q8_0", "emb_essays_qwen3_embedding_4b_q4_k_m"], "x": [1694476800000000000, 1706572800000000000, 1749081600000000000, 1749081600000000000, 1749081600000000000, 1749081600000000000, 1749081600000000000], "y": [0.6283333333333333, 0.7266666666666667, 0.715, 0.7166666666666667, 0.7466666666666667, 0.73, 0.7216666666666667], "type": "scatter"}, {"customdata": [["UKPLab (sentence-transformers)", 0, 60.0], ["UKPLab (sentence-transformers)", 0, 62.0], ["Mixedbread AI (Berlin)", 0, 64.68]], "hovertemplate": "<b>%{text}</b><br>Country: Germany<br>Released: %{x|%Y-%m-%d}<br>Accuracy: %{y:.4f}<br>Developer: %{customdata[0]}<br>Dimensions: %{customdata[1]}<br>MTEB: %{customdata[2]:.2f}<br><extra></extra>", "marker": {"color": "#2ca02c", "line": {"color": "white", "width": 1}, "opacity": 0.8, "size": 12}, "mode": "markers", "name": "Germany", "text": ["emb_essays_all_minilm_22m", "emb_essays_all_minilm_33m", "emb_essays_mxbai_embed_large"], "x": [1625011200000000000, 1625011200000000000, 1709856000000000000], "y": [0.5933333333333334, 0.6, 0.6466666666666666], "type": "scatter"}, {"customdata": [["Nomic AI", 0, 62.28], ["Snowflake Inc.", 0, 53.28], ["Snowflake Inc.", 0, 54.9], ["Snowflake Inc.", 0, 54.83], ["Snowflake Inc.", 0, 55.98], ["Snowflake Inc.", 0, 55.6], ["IBM Research / IBM Granite Team", 0, 58.3], ["IBM Research / IBM Granite Team", 0, 56.5], ["Google DeepMind", 0, 60.93], ["Google DeepMind", 0, 61.15], ["Google DeepMind", 0, 60.62]], "hovertemplate": "<b>%{text}</b><br>Country: USA<br>Released: %{x|%Y-%m-%d}<br>Accuracy: %{y:.4f}<br>Developer: %{customdata[0]}<br>Dimensions: %{customdata[1]}<br>MTEB: %{customdata[2]:.2f}<br><extra></extra>", "marker": {"color": "#1f77b4", "line": {"color": "white", "width": 1}, "opacity": 0.8, "size": 12}, "mode": "markers", "name": "USA", "text": ["emb_essays_nomic_embed_text_1_5", "emb_essays_snowflake_arctic_embed_22m", "emb_essays_snowflake_arctic_embed_110m", "emb_essays_snowflake_arctic_embed_137m", "emb_essays_snowflake_arctic_embed_335m", "emb_essays_snowflake_arctic_embed2_568m", "emb_essays_granite_embedding_278m_fp16", "emb_essays_granite_embedding_30m_fp16", "emb_essays_embeddinggemma_300m_qat_q8", "emb_essays_embeddinggemma_300m_bf16", "emb_essays_embeddinggemma_300m_qat_q4"], "x": [1706745600000000000, 1713225600000000000, 1713225600000000000, 1713225600000000000, 1713225600000000000, 1733270400000000000, 1734480000000000000, 1734480000000000000, 1756944000000000000, 1756944000000000000, 1756944000000000000], "y": [0.6566666666666666, 0.4733333333333333, 0.6033333333333334, 0.4933333333333333, 0.4133333333333333, 0.7033333333333334, 0.6216666666666667, 0.6166666666666667, 0.1733333333333333, 0.17, 0.2066666666666666], "type": "scatter"}], "layout": {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "legend": {"orientation": "v", "yanchor": "top", "y": 0.99, "xanchor": "right", "x": 0.99, "bgcolor": "rgba(255, 255, 255, 0.8)", "bordercolor": "gray", "borderwidth": 1}, "margin": {"l": 80, "r": 80, "t": 100, "b": 80}, "title": {"text": "Timeline of Model Releases by Country"}, "xaxis": {"title": {"text": "Release Date"}, "showgrid": true, "gridwidth": 1, "gridcolor": "lightgray"}, "yaxis": {"title": {"text": "Overall Accuracy"}, "showgrid": true, "gridwidth": 1, "gridcolor": "lightgray", "tickformat": ".4f"}, "height": 600, "hovermode": "closest"}};
+        var config = {"displayModeBar": true, "displaylogo": false, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "toImageButtonOptions": {"format": "png", "filename": "rag_benchmark_chart", "height": 800, "width": 1200, "scale": 2}};
+
+        console.log('temporal data loaded successfully');
+
+        // Render the chart
+        Plotly.newPlot('temporal-chart', figData.data, figData.layout, config)
+            .then(function() {
+                console.log('temporal rendered successfully');
+            })
+            .catch(function(err) {
+                console.error('temporal rendering error:', err);
+            });
+    } catch(err) {
+        console.error('temporal initialization error:', err);
+    }
+})();
+
+
+        // Developer Chart
+        
+(function() {
+    console.log('Initializing developer chart...');
+
+    try {
+        var figData = {"data": [{"hovertemplate": "<b>%{x}</b><br>Models: %{y}<br>Country: China<br><extra></extra>", "marker": {"color": "#ff7f0e"}, "name": "China", "showlegend": true, "x": ["Qwen Team, Alibaba Cloud / DAMO Academy", "BAAI (Beijing Academy of Artificial Intelligence)"], "y": [5, 2], "type": "bar", "xaxis": "x", "yaxis": "y"}, {"hovertemplate": "<b>%{x}</b><br>Models: %{y}<br>Country: Germany<br><extra></extra>", "marker": {"color": "#2ca02c"}, "name": "Germany", "showlegend": true, "x": ["UKPLab (sentence-transformers)", "Mixedbread AI (Berlin)"], "y": [2, 1], "type": "bar", "xaxis": "x", "yaxis": "y"}, {"hovertemplate": "<b>%{x}</b><br>Models: %{y}<br>Country: USA<br><extra></extra>", "marker": {"color": "#1f77b4"}, "name": "USA", "showlegend": true, "x": ["Snowflake Inc.", "Google DeepMind", "IBM Research / IBM Granite Team", "Nomic AI"], "y": [5, 3, 2, 1], "type": "bar", "xaxis": "x", "yaxis": "y"}, {"hovertemplate": "<b>%{x}</b><br>Market Share: %{y:.1f}%<br>Country: China<br><extra></extra>", "marker": {"color": "#ff7f0e"}, "name": "China", "showlegend": false, "x": ["Qwen Team, Alibaba Cloud / DAMO Academy", "BAAI (Beijing Academy of Artificial Intelligence)"], "y": [71.42857142857143, 28.57142857142857], "type": "bar", "xaxis": "x2", "yaxis": "y2"}, {"hovertemplate": "<b>%{x}</b><br>Market Share: %{y:.1f}%<br>Country: Germany<br><extra></extra>", "marker": {"color": "#2ca02c"}, "name": "Germany", "showlegend": false, "x": ["UKPLab (sentence-transformers)", "Mixedbread AI (Berlin)"], "y": [66.66666666666666, 33.33333333333333], "type": "bar", "xaxis": "x2", "yaxis": "y2"}, {"hovertemplate": "<b>%{x}</b><br>Market Share: %{y:.1f}%<br>Country: USA<br><extra></extra>", "marker": {"color": "#1f77b4"}, "name": "USA", "showlegend": false, "x": ["Snowflake Inc.", "Google DeepMind", "IBM Research / IBM Granite Team", "Nomic AI"], "y": [45.45454545454545, 27.27272727272727, 18.181818181818183, 9.090909090909092], "type": "bar", "xaxis": "x2", "yaxis": "y2"}], "layout": {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "xaxis": {"anchor": "y", "domain": [0.0, 0.45], "title": {"text": "Developer"}, "tickangle": -45}, "yaxis": {"anchor": "x", "domain": [0.0, 1.0], "title": {"text": "Number of Models"}}, "xaxis2": {"anchor": "y2", "domain": [0.55, 1.0], "title": {"text": "Developer"}, "tickangle": -45}, "yaxis2": {"anchor": "x2", "domain": [0.0, 1.0], "title": {"text": "Market Share (%)"}}, "annotations": [{"font": {"size": 16}, "showarrow": false, "text": "Top Developers by Model Count", "x": 0.225, "xanchor": "center", "xref": "paper", "y": 1.0, "yanchor": "bottom", "yref": "paper"}, {"font": {"size": 16}, "showarrow": false, "text": "Market Share within Country (%)", "x": 0.775, "xanchor": "center", "xref": "paper", "y": 1.0, "yanchor": "bottom", "yref": "paper"}], "legend": {"orientation": "v", "yanchor": "top", "y": 0.99, "xanchor": "right", "x": 1.15}, "margin": {"l": 80, "r": 150, "t": 100, "b": 150}, "title": {"text": "Developer Ecosystem Analysis by Country"}, "height": 600, "barmode": "group"}};
+        var config = {"displayModeBar": true, "displaylogo": false, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "toImageButtonOptions": {"format": "png", "filename": "rag_benchmark_chart", "height": 800, "width": 1200, "scale": 2}};
+
+        console.log('developer data loaded successfully');
+
+        // Render the chart
+        Plotly.newPlot('developer-chart', figData.data, figData.layout, config)
+            .then(function() {
+                console.log('developer rendered successfully');
+            })
+            .catch(function(err) {
+                console.error('developer rendering error:', err);
+            });
+    } catch(err) {
+        console.error('developer initialization error:', err);
+    }
+})();
+
+
+        // Technical Chart
+        
+(function() {
+    console.log('Initializing technical chart...');
+
+    try {
+        var figData = {"data": [{"boxmean": "sd", "marker": {"color": "#ff7f0e"}, "name": "China", "showlegend": false, "y": [0, 0, 0, 0, 0, 0, 0], "type": "box", "xaxis": "x", "yaxis": "y"}, {"boxmean": "sd", "marker": {"color": "#2ca02c"}, "name": "Germany", "showlegend": false, "y": [0, 0, 0], "type": "box", "xaxis": "x", "yaxis": "y"}, {"boxmean": "sd", "marker": {"color": "#1f77b4"}, "name": "USA", "showlegend": false, "y": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "type": "box", "xaxis": "x", "yaxis": "y"}, {"boxmean": "sd", "marker": {"color": "#ff7f0e"}, "name": "China", "showlegend": false, "y": [512, 40960, 32768, 32768, 8192, 40960, 40960], "type": "box", "xaxis": "x2", "yaxis": "y2"}, {"boxmean": "sd", "marker": {"color": "#2ca02c"}, "name": "Germany", "showlegend": false, "y": [512, 512, 512], "type": "box", "xaxis": "x2", "yaxis": "y2"}, {"boxmean": "sd", "marker": {"color": "#1f77b4"}, "name": "USA", "showlegend": false, "y": [512, 512, 2048, 512, 2048, 8192, 2048, 2048, 2048, 512, 512], "type": "box", "xaxis": "x2", "yaxis": "y2"}, {"marker": {"color": "#ff7f0e", "opacity": 0.7, "size": 8}, "mode": "markers", "name": "China", "showlegend": true, "x": [0, 0, 0, 0, 0, 0, 0], "y": [0.6283333333333333, 0.73, 0.715, 0.7166666666666667, 0.7266666666666667, 0.7466666666666667, 0.7216666666666667], "type": "scatter", "xaxis": "x3", "yaxis": "y3"}, {"marker": {"color": "#2ca02c", "opacity": 0.7, "size": 8}, "mode": "markers", "name": "Germany", "showlegend": true, "x": [0, 0, 0], "y": [0.5933333333333334, 0.6, 0.6466666666666666], "type": "scatter", "xaxis": "x3", "yaxis": "y3"}, {"marker": {"color": "#1f77b4", "opacity": 0.7, "size": 8}, "mode": "markers", "name": "USA", "showlegend": true, "x": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "y": [0.4733333333333333, 0.6033333333333334, 0.4933333333333333, 0.4133333333333333, 0.6566666666666666, 0.7033333333333334, 0.2066666666666666, 0.1733333333333333, 0.17, 0.6166666666666667, 0.6216666666666667], "type": "scatter", "xaxis": "x3", "yaxis": "y3"}, {"marker": {"color": "#ff7f0e"}, "name": "China", "showlegend": false, "x": ["FP16", "FP32, FP16, BF16, GGUF (F16, Q8_0)", "FP32, FP16, BF16, ONNX", "Q4_K_M, Q5_K_M, Q6_K, Q8_0, F16", "Q8_0 (8-bit linear)", "q4_K_M (4-bit K-quant medium)"], "y": [1, 1, 1, 1, 2, 1], "type": "bar", "xaxis": "x4", "yaxis": "y4"}, {"marker": {"color": "#2ca02c"}, "name": "Germany", "showlegend": false, "x": ["FP32, FP16", "float32, float16, int8, uint8, binary, ubinary"], "y": [2, 1], "type": "bar", "xaxis": "x4", "yaxis": "y4"}, {"marker": {"color": "#1f77b4"}, "name": "USA", "showlegend": false, "x": ["BFloat16 (baseline)", "F16", "F32, F16, GGUF (Q2_K to Q8_0)", "FP16, INT8, INT4", "Q4_0 with Quantization-Aware Training", "Q8_0 with Quantization-Aware Training", "fp16"], "y": [1, 4, 1, 1, 1, 1, 2], "type": "bar", "xaxis": "x4", "yaxis": "y4"}], "layout": {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "xaxis": {"anchor": "y", "domain": [0.0, 0.44]}, "yaxis": {"anchor": "x", "domain": [0.56, 1.0], "title": {"text": "Parameters (M)"}}, "xaxis2": {"anchor": "y2", "domain": [0.56, 1.0]}, "yaxis2": {"anchor": "x2", "domain": [0.56, 1.0], "title": {"text": "Context Length"}}, "xaxis3": {"anchor": "y3", "domain": [0.0, 0.44], "title": {"text": "Dimensions"}}, "yaxis3": {"anchor": "x3", "domain": [0.0, 0.44], "title": {"text": "Accuracy"}}, "xaxis4": {"anchor": "y4", "domain": [0.56, 1.0], "title": {"text": "Quantization"}, "tickangle": -45}, "yaxis4": {"anchor": "x4", "domain": [0.0, 0.44], "title": {"text": "Count"}}, "annotations": [{"font": {"size": 16}, "showarrow": false, "text": "Model Size Distribution (Parameters)", "x": 0.22, "xanchor": "center", "xref": "paper", "y": 1.0, "yanchor": "bottom", "yref": "paper"}, {"font": {"size": 16}, "showarrow": false, "text": "Context Length Comparison", "x": 0.78, "xanchor": "center", "xref": "paper", "y": 1.0, "yanchor": "bottom", "yref": "paper"}, {"font": {"size": 16}, "showarrow": false, "text": "Dimension vs Performance", "x": 0.22, "xanchor": "center", "xref": "paper", "y": 0.44, "yanchor": "bottom", "yref": "paper"}, {"font": {"size": 16}, "showarrow": false, "text": "Quantization Methods", "x": 0.78, "xanchor": "center", "xref": "paper", "y": 0.44, "yanchor": "bottom", "yref": "paper"}], "legend": {"orientation": "v", "yanchor": "top", "y": 0.99, "xanchor": "right", "x": 1.12}, "margin": {"l": 80, "r": 150, "t": 100, "b": 80}, "title": {"text": "Technical Specialization Overview by Country"}, "height": 900, "showlegend": true}};
+        var config = {"displayModeBar": true, "displaylogo": false, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "toImageButtonOptions": {"format": "png", "filename": "rag_benchmark_chart", "height": 800, "width": 1200, "scale": 2}};
+
+        console.log('technical data loaded successfully');
+
+        // Render the chart
+        Plotly.newPlot('technical-chart', figData.data, figData.layout, config)
+            .then(function() {
+                console.log('technical rendered successfully');
+            })
+            .catch(function(err) {
+                console.error('technical rendering error:', err);
+            });
+    } catch(err) {
+        console.error('technical initialization error:', err);
+    }
+})();
+
+
+        // Benchmark Chart
+        
+(function() {
+    console.log('Initializing benchmark chart...');
+
+    try {
+        var figData = {"data": [{"name": "MTEB", "showlegend": true, "x": ["China", "Germany", "USA"], "y": [65.94285714285715, 62.22666666666667, 57.67], "type": "bar", "xaxis": "x", "yaxis": "y"}, {"name": "BEIR", "showlegend": true, "x": ["China", "Germany", "USA"], "y": [14.727142857142857, 18.13, 33.46818181818182], "type": "bar", "xaxis": "x", "yaxis": "y"}, {"name": "MIRACL", "showlegend": true, "x": ["China", "Germany", "USA"], "y": [10.0, 0.0, 10.372727272727273], "type": "bar", "xaxis": "x", "yaxis": "y"}, {"boxmean": "sd", "marker": {"color": "#ff7f0e"}, "name": "China", "showlegend": false, "y": [64.23, 69.45, 64.33, 64.0, 59.56, 70.58, 69.45], "type": "box", "xaxis": "x2", "yaxis": "y2"}, {"boxmean": "sd", "marker": {"color": "#2ca02c"}, "name": "Germany", "showlegend": false, "y": [60.0, 62.0, 64.68], "type": "box", "xaxis": "x2", "yaxis": "y2"}, {"boxmean": "sd", "marker": {"color": "#1f77b4"}, "name": "USA", "showlegend": false, "y": [53.28, 54.9, 54.83, 55.98, 62.28, 55.6, 60.62, 60.93, 61.15, 56.5, 58.3], "type": "box", "xaxis": "x2", "yaxis": "y2"}, {"boxmean": "sd", "marker": {"color": "#ff7f0e"}, "name": "China", "showlegend": false, "y": [0, 0, 0, 0, 0, 0, 0], "type": "box", "xaxis": "x3", "yaxis": "y3"}, {"boxmean": "sd", "marker": {"color": "#2ca02c"}, "name": "Germany", "showlegend": false, "y": [0, 0, 0], "type": "box", "xaxis": "x3", "yaxis": "y3"}, {"boxmean": "sd", "marker": {"color": "#1f77b4"}, "name": "USA", "showlegend": false, "y": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "type": "box", "xaxis": "x3", "yaxis": "y3"}, {"marker": {"color": "#ff7f0e", "opacity": 0.7, "size": 8}, "mode": "markers", "name": "China", "showlegend": false, "x": [64.23, 69.45, 64.33, 64.0, 59.56, 70.58, 69.45], "y": [0.6283333333333333, 0.73, 0.715, 0.7166666666666667, 0.7266666666666667, 0.7466666666666667, 0.7216666666666667], "type": "scatter", "xaxis": "x4", "yaxis": "y4"}, {"marker": {"color": "#2ca02c", "opacity": 0.7, "size": 8}, "mode": "markers", "name": "Germany", "showlegend": false, "x": [60.0, 62.0, 64.68], "y": [0.5933333333333334, 0.6, 0.6466666666666666], "type": "scatter", "xaxis": "x4", "yaxis": "y4"}, {"marker": {"color": "#1f77b4", "opacity": 0.7, "size": 8}, "mode": "markers", "name": "USA", "showlegend": false, "x": [53.28, 54.9, 54.83, 55.98, 62.28, 55.6, 60.62, 60.93, 61.15, 56.5, 58.3], "y": [0.4733333333333333, 0.6033333333333334, 0.4933333333333333, 0.4133333333333333, 0.6566666666666666, 0.7033333333333334, 0.2066666666666666, 0.1733333333333333, 0.17, 0.6166666666666667, 0.6216666666666667], "type": "scatter", "xaxis": "x4", "yaxis": "y4"}], "layout": {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "xaxis": {"anchor": "y", "domain": [0.0, 0.44], "title": {"text": "Country"}}, "yaxis": {"anchor": "x", "domain": [0.56, 1.0], "title": {"text": "Score"}}, "xaxis2": {"anchor": "y2", "domain": [0.56, 1.0]}, "yaxis2": {"anchor": "x2", "domain": [0.56, 1.0], "title": {"text": "MTEB Score"}}, "xaxis3": {"anchor": "y3", "domain": [0.0, 0.44]}, "yaxis3": {"anchor": "x3", "domain": [0.0, 0.44], "title": {"text": "Retrieval Score"}}, "xaxis4": {"anchor": "y4", "domain": [0.56, 1.0], "title": {"text": "MTEB Score"}}, "yaxis4": {"anchor": "x4", "domain": [0.0, 0.44], "title": {"text": "Overall Accuracy"}}, "annotations": [{"font": {"size": 16}, "showarrow": false, "text": "Benchmark Suites", "x": 0.22, "xanchor": "center", "xref": "paper", "y": 1.0, "yanchor": "bottom", "yref": "paper"}, {"font": {"size": 16}, "showarrow": false, "text": "MTEB Distribution", "x": 0.78, "xanchor": "center", "xref": "paper", "y": 1.0, "yanchor": "bottom", "yref": "paper"}, {"font": {"size": 16}, "showarrow": false, "text": "Task Performance (Retrieval)", "x": 0.22, "xanchor": "center", "xref": "paper", "y": 0.44, "yanchor": "bottom", "yref": "paper"}, {"font": {"size": 16}, "showarrow": false, "text": "Overall Accuracy vs MTEB", "x": 0.78, "xanchor": "center", "xref": "paper", "y": 0.44, "yanchor": "bottom", "yref": "paper"}], "legend": {"orientation": "v", "yanchor": "top", "y": 0.99, "xanchor": "right", "x": 1.12}, "margin": {"l": 80, "r": 150, "t": 100, "b": 80}, "title": {"text": "Comprehensive Benchmark Analysis by Country"}, "height": 900, "showlegend": true, "barmode": "group"}};
+        var config = {"displayModeBar": true, "displaylogo": false, "modeBarButtonsToRemove": ["lasso2d", "select2d"], "toImageButtonOptions": {"format": "png", "filename": "rag_benchmark_chart", "height": 800, "width": 1200, "scale": 2}};
+
+        console.log('benchmark data loaded successfully');
+
+        // Render the chart
+        Plotly.newPlot('benchmark-chart', figData.data, figData.layout, config)
+            .then(function() {
+                console.log('benchmark rendered successfully');
+            })
+            .catch(function(err) {
+                console.error('benchmark rendering error:', err);
+            });
+    } catch(err) {
+        console.error('benchmark initialization error:', err);
+    }
+})();
+
+
+        // Populate developer dropdown from actual model data
+        window.addEventListener('load', () => {
+            const developerSelect = document.getElementById('filter-developer');
+
+            // Extract unique developers from model data
+            const developers = [...new Set(ALL_MODELS_DATA.map(m => m.developer).filter(d => d && d !== 'Unknown'))];
+            developers.sort();
+
+            console.log('Found developers:', developers);
+
+            developers.forEach(dev => {
+                const option = document.createElement('option');
+                option.value = dev;
+                option.textContent = dev;
+                developerSelect.appendChild(option);
+            });
+        });
+    </script>
+</body>
+</html>

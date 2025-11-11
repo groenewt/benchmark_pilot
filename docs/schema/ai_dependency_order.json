@@ -1,0 +1,712 @@
+{
+  "schema": "ai",
+  "total_objects": 381,
+  "dependency_levels": 1,
+  "sorted_levels": [
+    {
+      "level": 0,
+      "object_count": 85,
+      "objects": [
+        {
+          "name": "ai._vectorizer_errors_id_recorded_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_errors"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_132_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_132"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_133_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_133"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_134_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_134"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_135_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_135"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_136_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_136"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_137_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_137"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_1_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_1"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_2_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_2"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_48_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_48"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_49_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_49"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_50_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_50"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_51_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_51"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_52_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_52"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_53_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_53"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_54_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_54"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_55_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_55"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_56_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_56"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_58_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_58"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_59_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_59"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_60_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_60"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_61_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_61"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_62_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_62"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_63_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_63"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_71_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_71"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_72_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_72"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_73_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_73"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_74_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_74"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_75_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_75"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_76_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_76"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_77_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_77"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_78_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_78"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_79_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_79"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_80_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_80"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_81_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_81"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_82_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_82"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_83_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_83"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_84_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_84"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_85_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_85"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_86_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_86"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_132_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_132"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_133_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_133"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_134_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_134"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_135_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_135"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_136_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_136"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_137_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_137"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_1_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_1"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_2_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_2"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_48_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_48"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_49_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_49"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_50_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_50"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_51_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_51"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_52_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_52"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_53_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_53"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_54_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_54"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_55_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_55"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_56_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_56"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_58_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_58"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_59_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_59"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_60_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_60"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_61_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_61"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_62_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_62"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_63_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_63"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_71_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_71"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_72_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_72"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_73_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_73"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_74_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_74"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_75_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_75"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_76_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_76"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_77_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_77"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_78_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_78"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_79_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_79"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_80_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_80"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_81_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_81"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_82_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_82"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_83_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_83"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_84_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_84"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_85_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_85"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_q_failed_86_id_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai._vectorizer_q_failed_86"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai._vectorizer_should_create_vector_index",
+          "type": "unknown",
+          "dependencies": [
+            "ai.vectorizer"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai.create_semantic_catalog",
+          "type": "unknown",
+          "dependencies": [
+            "ai.embedding_sentence_transformers"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai.create_vectorizer",
+          "type": "unknown",
+          "dependencies": [
+            "ai.formatting_python_template",
+            "ai.parsing_auto",
+            "ai.scheduling_default",
+            "ai.indexing_default",
+            "ai.chunking_recursive_character_text_splitter",
+            "ai.destination_table",
+            "ai.grant_to",
+            "ai.processing_default"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai.sc_add_embedding",
+          "type": "unknown",
+          "dependencies": [
+            "ai.semantic_catalog_embedding"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai.set_scheduling",
+          "type": "unknown",
+          "dependencies": [
+            "ai.scheduling_default",
+            "ai.indexing_default"
+          ],
+          "dependents": []
+        },
+        {
+          "name": "ai.vectorizer_worker_process_last_heartbeat_idx",
+          "type": "unknown",
+          "dependencies": [
+            "ai.vectorizer_worker_process"
+          ],
+          "dependents": []
+        }
+      ]
+    }
+  ],
+  "categories": {
+    "types": [],
+    "sequences": [],
+    "tables": [],
+    "indexes": [],
+    "functions": [],
+    "procedures": [],
+    "aggregates": [],
+    "triggers": [],
+    "views": []
+  }
+}
